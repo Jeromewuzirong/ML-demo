@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能二分类建模平台</title>
+<style>
+  :root{--accent:#2f6bff;--green:#16a34a;--ink:#1f2d3d;--sub:#6b7c93;--line:#e5ebf3;
+    --bg:#f4f7fb;--panel:#fff;--chip:#eef4ff;--chipb:#cfe0ff;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Microsoft YaHei","PingFang SC",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+  .app{display:flex;min-height:100vh}
+  .side{width:180px;background:linear-gradient(180deg,#0f2a5e,#0b1f47);color:#cdd8ef;display:flex;flex-direction:column;flex-shrink:0}
+  .logo{display:flex;gap:10px;align-items:center;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .logo .ic{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#3d7bff,#1e5bd6);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+  .logo b{color:#fff;font-size:14px;line-height:1.3}
+  .nav{padding:12px 10px;display:flex;flex-direction:column;gap:4px}
+  .nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#b9c7e6}
+  .nav a.on{background:linear-gradient(90deg,#2f6bff,#3d7bff);color:#fff}
+  .side .foot{margin-top:auto;padding:16px;color:#8ea3cf;font-size:12px;text-align:center;line-height:1.7;border-top:1px solid rgba(255,255,255,.08)}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .top{background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:16px}
+  .top h1{font-size:17px;margin:0;font-weight:800}
+  .top .sp{flex:1}
+  .top .user{display:flex;gap:8px;align-items:center;font-weight:600}
+  .top .user .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3d7bff,#1e5bd6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .steps{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .step{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:12.5px}
+  .step .n{width:22px;height:22px;border-radius:50%;background:#dfe7f3;color:#7f8fa8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .step.on{color:var(--accent);font-weight:700}
+  .step.on .n{background:var(--accent);color:#fff}
+  .step.done .n{background:var(--green);color:#fff}
+  .step .bar{width:46px;height:2px;background:#dfe7f3}
+  .wrap{padding:16px 22px;display:flex;flex-direction:column;gap:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .panel.lock{opacity:.55}
+  .ph{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:12px}
+  .ph .b{width:6px;height:16px;border-radius:3px;background:var(--accent)}
+  .ph .tag{font-size:11px;font-weight:700;color:#fff;background:var(--accent);border-radius:10px;padding:1px 9px}
+  .ph .tag.g{background:var(--green)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .sub{color:var(--sub);font-size:12px}
+  .drop{border:2px dashed #b7ccf2;border-radius:10px;padding:22px;text-align:center;color:var(--accent);cursor:pointer;background:#f7faff}
+  .drop:hover{background:#eef4ff}
+  .drop .big{font-size:14px;font-weight:700;margin-top:4px}
+  .fileinfo{margin-top:10px;display:none;align-items:center;gap:10px;background:#f3f7ff;border:1px solid var(--chipb);border-radius:8px;padding:8px 12px;font-size:12px}
+  .fileinfo .x{width:26px;height:26px;background:#1a7f37;color:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+  .cols{display:grid;grid-template-columns:1fr auto 1fr 1fr;gap:12px}
+  .box{border:1px dashed #cdd9ec;border-radius:9px;padding:10px;min-height:96px;background:#fbfdff}
+  .box .bt{font-weight:700;font-size:12.5px;margin-bottom:8px;color:#33507d}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--chip);border:1px solid var(--chipb);color:#274a86;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer;user-select:none}
+  .chip:hover{background:#dbe8ff}
+  .chip .x{margin-left:5px;color:#7a93c4;font-weight:700}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--sub);border:1px dashed #cdd9ec;border-radius:9px;font-size:11px;background:#fbfdff;padding:4px}
+  select,input[type=text]{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink)}
+  .tg{position:relative;width:40px;height:22px;border-radius:12px;background:#cfd8e6;cursor:pointer}
+  .tg.on{background:var(--accent)}
+  .tg::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+  .tg.on::after{left:20px}
+  .row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .row label{width:92px;color:var(--sub)}
+  .thbadge{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-weight:700}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .btn{border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+  .btn.primary{background:linear-gradient(90deg,#2f6bff,#3d7bff);color:#fff}
+  .btn.green{background:linear-gradient(90deg,#16a34a,#20b358);color:#fff}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:#33507d}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .banner{margin-top:10px;background:#eef7ee;border:1px solid #bfe3c9;border-radius:8px;padding:8px 12px;font-size:12px;color:#1a7f37;line-height:1.6}
+  .map{display:grid;grid-template-columns:1fr 24px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px}
+  .map .bad{color:#c0392b}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .status-ok{color:var(--green);font-weight:800}
+  .donutwrap{display:flex;align-items:center;gap:16px;justify-content:center}
+  .donut{width:120px;height:120px;border-radius:50%;position:relative;background:conic-gradient(var(--accent) 0 0,#16a34a 0 0)}
+  .donut .hole{position:absolute;inset:18px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .donut .hole small{color:var(--sub);font-size:11px}
+  .donut .hole b{font-size:20px}
+  .leg{font-size:12.5px;line-height:1.9}
+  .leg .d{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:center}
+  th{color:var(--sub);font-weight:600;background:#f8fbff}
+  .tag2{padding:1px 8px;border-radius:10px;font-size:11px}
+  .tag2.pos{background:#e8f0ff;color:#2f6bff}
+  .tag2.neg{background:#eafaf0;color:#16a34a}
+  .toast{position:fixed;top:16px;right:16px;background:#1f2d3d;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;z-index:99;max-width:460px}
+  .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><div class="ic">AI</div><b>智能二分类<br>建模平台</b></div>
+    <nav class="nav"><a class="on">🏠 首页</a><a>🗂 任务中心</a><a>🧊 模型管理</a><a>📊 结果中心</a><a>⚙ 系统设置</a></nav>
+    <div class="foot">让数据驱动决策<br>让模型创造价值</div>
+  </aside>
+  <div class="main">
+    <div class="top"><h1>智能二分类建模平台</h1><div class="sp"></div>
+      <span class="user"><span class="av">用</span>用户 ▾</span></div>
+    <div class="steps" id="steps">
+      <div class="step on" data-s="1"><span class="n">1</span>上传训练文件</div><div class="bar"></div>
+      <div class="step" data-s="2"><span class="n">2</span>训练并保存模型</div><div class="bar"></div>
+      <div class="step" data-s="3"><span class="n">3</span>上传预测文件</div><div class="bar"></div>
+      <div class="step" data-s="4"><span class="n">4</span>输出预测结果</div>
+    </div>
+    <div class="wrap">
+
+      <!-- ===== 第一步：训练 ===== -->
+      <div class="panel" id="trainPanel">
+        <div class="ph"><span class="b"></span>第一步 · 训练文件 <span class="tag">训练模型</span></div>
+        <div class="grid2">
+          <div>
+            <div class="drop" id="dropTrain"><div style="font-size:22px">⬆️</div>
+              <div class="big">点击或拖入【训练用】Excel</div>
+              <div class="sub">需含目标列 Y（二值 0/1、是否、Y/N 均可）</div></div>
+            <input type="file" id="fileTrain" accept=".xlsx,.xls" style="display:none">
+            <div class="fileinfo" id="fiTrain"><div class="x">XLS</div><div id="ftTrain"></div></div>
+          </div>
+          <div>
+            <div class="ph" style="font-size:13px"><span class="b"></span>预处理与参数</div>
+            <div class="row"><label>缺失值</label>
+              <select id="impute"><option value="mean">均值填充</option><option value="median">中位数填充</option><option value="zero">0 填充</option></select>
+              <label style="width:auto">标准化</label><div class="tg" id="scalerTg" onclick="this.classList.toggle('on')"></div><span class="sub">（业务打分建议关闭）</span>
+            </div>
+            <div class="row"><label>阈值</label>
+              <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrTrain" style="flex:1"
+                oninput="thTrainVal.textContent=(+this.value).toFixed(2)">
+              <span class="thbadge" id="thTrainVal">0.50</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px" id="trainFields">
+          <div class="cols">
+            <div class="box"><div class="bt">可选字段</div><div class="chips" id="poolChips"><span class="sub">上传训练文件后自动填充…</span></div></div>
+            <div class="arrow">▶</div>
+            <div class="box"><div class="bt">训练输入字段 (X)</div><div class="chips" id="inputChips"></div></div>
+            <div class="box"><div class="bt">目标字段 (Y)</div><select id="outputSel" style="width:100%"><option>—</option></select>
+              <div class="sub" style="margin-top:8px">点“可选/输入”里的字段可移动</div></div>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn primary" id="trainBtn" onclick="doTrain()" disabled>▶ 开始训练并保存模型</button>
+          <button class="btn ghost" id="expTrainBtn" disabled onclick="dl(trainDL)">⬇ 导出训练打分</button>
+        </div>
+        <div class="banner" id="trainResult" style="display:none"></div>
+      </div>
+
+      <!-- ===== 第二步：预测 ===== -->
+      <div class="panel lock" id="predPanel">
+        <div class="ph"><span class="b"></span>第二步 · 预测文件 <span class="tag g">套用模型出结果</span>
+          <span class="sub" id="predLock" style="font-weight:400">（完成训练后解锁）</span></div>
+        <div class="grid2">
+          <div>
+            <div class="drop" id="dropPred"><div style="font-size:22px">⬆️</div>
+              <div class="big">点击或拖入【待预测】Excel</div>
+              <div class="sub">无需 Y 列，只要含模型用到的字段</div></div>
+            <input type="file" id="filePred" accept=".xlsx,.xls" style="display:none">
+            <div class="fileinfo" id="fiPred"><div class="x">XLS</div><div id="ftPred"></div></div>
+            <div class="row" style="margin-top:12px"><label>阈值</label>
+              <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrPred" style="flex:1"
+                oninput="thPredVal.textContent=(+this.value).toFixed(2)">
+              <span class="thbadge" id="thPredVal">0.50</span></div>
+            <div class="row"><label>对比列</label>
+              <select id="compareCol" style="flex:1"><option value="">（不对比）</option></select></div>
+            <div class="sub" style="margin:2px 0 0 102px">可选预测文件里的实际结果列（如 Local Buy决策），比对后给出准确率</div>
+            <div class="btns">
+              <button class="btn green" id="predBtn" onclick="doPredict()" disabled>▶ 生成预测结果</button>
+              <button class="btn ghost" id="expPredBtn" disabled onclick="dl(predDL)">⬇ 导出预测结果 Excel</button>
+            </div>
+          </div>
+          <div>
+            <div class="ph" style="font-size:13px"><span class="b"></span>字段映射（模型字段 → 预测文件的列）</div>
+            <div id="mapArea"><span class="sub">上传预测文件后，自动匹配同名列；名字不同的可在这里手动选择。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 结果 ===== -->
+      <div class="grid3" id="resultArea" style="display:none">
+        <div class="panel"><div class="ph"><span class="b"></span>状态</div><div id="statusBox"></div></div>
+        <div class="panel"><div class="ph"><span class="b"></span>结果分布</div>
+          <div class="donutwrap"><div class="donut" id="donut"><div class="hole"><small>总数</small><b id="dTotal">0</b></div></div>
+            <div class="leg" id="donutLeg"></div></div></div>
+        <div class="panel"><div class="ph"><span class="b"></span>预测结果预览 <span class="sub" style="font-weight:400">（前10行）</span></div>
+          <div style="max-height:200px;overflow:auto"><table><thead><tr><th>ID</th><th>预测(1/0)</th><th>概率</th><th>判断</th></tr></thead>
+            <tbody id="previewBody"><tr><td colspan="4" class="sub">运行后显示…</td></tr></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const S={columns:[],input:[],output:'',mapFeatures:[],mapCols:[]};
+let trainDL=null, predDL=null;
+function toast(m,ms=2800){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);}
+function setStep(n){document.querySelectorAll('.step').forEach(s=>{const k=+s.dataset.s;s.classList.toggle('on',k===n);s.classList.toggle('done',k<n);});}
+function dl(id){if(id)location.href='/api/download/'+id;}
+
+/* ---- 上传训练文件 ---- */
+const dt=document.getElementById('dropTrain'), ftIn=document.getElementById('fileTrain');
+dt.onclick=()=>ftIn.click();
+dt.ondragover=e=>{e.preventDefault();dt.style.background='#eef4ff';};
+dt.ondragleave=()=>dt.style.background='';
+dt.ondrop=e=>{e.preventDefault();dt.style.background='';if(e.dataTransfer.files[0])upTrain(e.dataTransfer.files[0]);};
+ftIn.onchange=e=>{if(e.target.files[0])upTrain(e.target.files[0]);};
+async function upTrain(f){
+  const fd=new FormData();fd.append('file',f);toast('上传训练文件并自动识别字段…');
+  const j=await(await fetch('/api/upload_train',{method:'POST',body:fd})).json();
+  if(!j.ok){toast('失败：'+tail(j.msg));return;}
+  const fi=document.getElementById('fiTrain');fi.style.display='flex';
+  document.getElementById('ftTrain').innerHTML=`<b>${j.filename}</b> ｜ ${(j.size/1048576).toFixed(1)}MB ｜ ${j.n_rows} 行`;
+  S.columns=j.columns;S.input=(j.input_fields||[]).slice();S.output=j.output_field||'';
+  renderFields();document.getElementById('trainBtn').disabled=false;setStep(1);
+  toast(j.output_field?`已识别：目标 Y=${j.output_field}，输入 X ${(j.input_fields||[]).length} 个`:'未识别到目标列 Y，请在下方手动选择');
+}
+function renderFields(){
+  const pool=S.columns.filter(c=>!S.input.includes(c)&&c!==S.output);
+  const pc=document.getElementById('poolChips');pc.innerHTML='';
+  pool.forEach(c=>pc.appendChild(chip(c,()=>{S.input.push(c);renderFields();})));
+  if(!pool.length)pc.innerHTML='<span class="sub">（全部已分配）</span>';
+  const ic=document.getElementById('inputChips');ic.innerHTML='';
+  S.input.forEach(c=>ic.appendChild(chip(c,()=>{S.input=S.input.filter(x=>x!==c);renderFields();},true)));
+  const sel=document.getElementById('outputSel');sel.innerHTML='';
+  S.columns.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;if(c===S.output)o.selected=true;sel.appendChild(o);});
+  sel.onchange=()=>{S.output=sel.value;S.input=S.input.filter(x=>x!==S.output);renderFields();};
+}
+function chip(t,fn,rm){const e=document.createElement('span');e.className='chip';e.innerHTML=t+(rm?' <span class="x">×</span>':'');e.onclick=fn;return e;}
+
+/* ---- 训练 ---- */
+async function doTrain(){
+  if(!S.input.length||!S.output){toast('请确认输入字段(X)和目标字段(Y)');return;}
+  const b=document.getElementById('trainBtn'),o=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span> 训练中…';
+  const cfg={threshold:+document.getElementById('thrTrain').value,impute:document.getElementById('impute').value,
+    scaler:document.getElementById('scalerTg').classList.contains('on'),target:S.output,features:S.input};
+  try{
+    const j=await(await fetch('/api/train',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})).json();
+    if(!j.ok){toast('训练失败：'+tail(j.msg));return;}
+    let h=`✔ 训练完成，模型已保存 <b>${j.model_version}</b>。目标 Y=${j.y_name}，输入 X ${j.features.length} 个。`;
+    if(j.cv)h+=` 交叉验证(${j.cv.k}折)准确率 <b>${j.cv.acc}</b>，F1 ${j.cv.f1}。`;
+    if(j.holdout)h+=` 单次切分准确率 ${j.holdout.acc}。`;
+    const tr=document.getElementById('trainResult');tr.style.display='block';tr.innerHTML=h;
+    trainDL=j.predict.download_id;document.getElementById('expTrainBtn').disabled=false;
+    showResult(j,'训练文件自身打分');
+    unlockPred(j.model_version,j.features);setStep(3);toast('训练完成，已解锁第二步');
+  }catch(e){toast('出错：'+e);}finally{b.disabled=false;b.innerHTML=o;}
+}
+
+/* ---- 解锁 + 上传预测文件 ---- */
+function unlockPred(ver,feats){
+  document.getElementById('predPanel').classList.remove('lock');
+  document.getElementById('predLock').textContent=`（当前模型 ${ver}，需字段 ${feats.length} 个）`;
+}
+const dp=document.getElementById('dropPred'), fpIn=document.getElementById('filePred');
+dp.onclick=()=>fpIn.click();
+dp.ondragover=e=>{e.preventDefault();dp.style.background='#eef4ff';};
+dp.ondragleave=()=>dp.style.background='';
+dp.ondrop=e=>{e.preventDefault();dp.style.background='';if(e.dataTransfer.files[0])upPred(e.dataTransfer.files[0]);};
+fpIn.onchange=e=>{if(e.target.files[0])upPred(e.target.files[0]);};
+async function upPred(f){
+  const fd=new FormData();fd.append('file',f);toast('上传预测文件并匹配字段…');
+  const j=await(await fetch('/api/upload_predict',{method:'POST',body:fd})).json();
+  if(!j.ok){toast('失败：'+tail(j.msg));return;}
+  const fi=document.getElementById('fiPred');fi.style.display='flex';
+  document.getElementById('ftPred').innerHTML=`<b>${j.filename}</b> ｜ ${j.n_rows} 行 ｜ 数据表: ${j.sheet}`;
+  S.mapFeatures=j.features;S.mapCols=j.columns;
+  fillCompare(j.columns);
+  renderMap(j.match);document.getElementById('predBtn').disabled=false;setStep(3);
+  const miss=j.features.filter(x=>!j.match[x]).length;
+  toast(miss?`有 ${miss} 个字段未自动匹配，请在右侧手动选择`:'字段已全部自动匹配，可直接生成预测结果');
+}
+function renderMap(match){
+  const area=document.getElementById('mapArea');area.innerHTML='';
+  S.mapFeatures.forEach(feat=>{
+    const sel=document.createElement('select');sel.style.width='100%';sel.dataset.feat=feat;
+    // 特殊选项：用训练均值 / 不采用(置0)
+    const om=document.createElement('option');om.value='__MEAN__';om.textContent='（用训练均值填充）';sel.appendChild(om);
+    const oz=document.createElement('option');oz.value='__ZERO__';oz.textContent='（不采用 / 置0）';sel.appendChild(oz);
+    S.mapCols.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+    // 默认：匹配到同名列就选它，否则默认用训练均值
+    sel.value = match[feat] ? match[feat] : '__MEAN__';
+    const wrap=document.createElement('div');wrap.className='map';
+    const matched = !!match[feat];
+    wrap.innerHTML=`<div${matched?'':' class="bad"'}>${feat}${matched?'':' ⚠'}</div><div>→</div>`;
+    const box=document.createElement('div');box.appendChild(sel);wrap.appendChild(box);
+    area.appendChild(wrap);
+  });
+}
+function fillCompare(cols){
+  const sel=document.getElementById('compareCol');sel.innerHTML='<option value="">（不对比）</option>';
+  let auto='';
+  cols.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);
+    const n=String(c).toLowerCase();
+    if(!auto&&(n.includes('决策')||n.includes('实际')||n.includes('label')||n.includes('预测y')||n.includes('buy')))auto=c;});
+  if(auto)sel.value=auto;
+}
+async function doPredict(){
+  const mapping={};document.querySelectorAll('#mapArea select').forEach(s=>{if(s.value)mapping[s.dataset.feat]=s.value;});
+  const b=document.getElementById('predBtn'),o=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span> 生成中…';
+  const cfg={threshold:+document.getElementById('thrPred').value,mapping,
+    compare_col:document.getElementById('compareCol').value||null};
+  try{
+    const j=await(await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})).json();
+    if(!j.ok){toast('预测失败：'+tail(j.msg));return;}
+    predDL=j.predict.download_id;document.getElementById('expPredBtn').disabled=false;
+    showResult(j,'预测文件');setStep(4);
+    if(j.warn){toast('⚠ '+j.warn,6000);}else{toast('预测完成 ✔ 可导出结果 Excel');}
+  }catch(e){toast('出错：'+e);}finally{b.disabled=false;b.innerHTML=o;}
+}
+
+/* ---- 结果展示 ---- */
+function showResult(j,srcLabel){
+  document.getElementById('resultArea').style.display='grid';
+  let h=`<div class="kv"><span>状态</span><span class="status-ok">✔ 成功</span></div>`;
+  h+=`<div class="kv"><span>来源</span><b>${j.predict_source||srcLabel}</b></div>`;
+  if(j.model_version)h+=`<div class="kv"><span>模型版本</span><b>${j.model_version}</b></div>`;
+  h+=`<div class="kv"><span>阈值</span><b>${(+j.threshold).toFixed(2)}</b></div>`;
+  if(j.cv)h+=`<div class="kv"><span>交叉验证准确率</span><b>${j.cv.acc}</b></div>`;
+  if(j.warn){h+=`<div class="kv"><span>提示</span><b style="color:#c07a00">部分字段缺失，已用训练均值填充</b></div>`;}
+  if(j.compare){
+    const cp=j.compare;
+    if(cp.error){h+=`<div class="kv"><span>对比列</span><b style="color:#c0392b">${cp.error}</b></div>`;}
+    else{
+      const pct=(cp.acc*100).toFixed(1);
+      h+=`<div class="kv" style="background:#eef7ee;border-radius:6px;padding:8px;margin-top:4px">`+
+         `<span>对比【${cp.col}】准确率</span><b style="color:#16a34a;font-size:15px">${pct}%</b></div>`;
+      h+=`<div class="kv"><span>一致 / 有效行</span><b>${cp.agree} / ${cp.n}</b></div>`;
+      h+=`<div class="kv"><span>混淆(TP/TN/FP/FN)</span><b>${cp.tp}/${cp.tn}/${cp.fp}/${cp.fn}</b></div>`;
+    }
+  }
+  document.getElementById('statusBox').innerHTML=h;
+  const p=j.predict;
+  document.getElementById('donut').style.background=`conic-gradient(var(--accent) 0 ${p.pos_pct}%,#16a34a ${p.pos_pct}% 100%)`;
+  document.getElementById('dTotal').textContent=p.n;
+  document.getElementById('donutLeg').innerHTML=
+    `<div><span class="d" style="background:var(--accent)"></span>正类(1) <b>${p.pos}</b>（${p.pos_pct}%）</div>`+
+    `<div><span class="d" style="background:#16a34a"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
+  const tb=document.getElementById('previewBody');tb.innerHTML='';
+  p.preview.forEach(r=>{tb.innerHTML+=`<tr><td>${r.id}</td><td><span class="tag2 ${r.label.includes('1')?'pos':'neg'}">${r.label}</span></td><td>${r.proba}</td><td class="sub">${r.judge}</td></tr>`;});
+}
+function tail(m){return(m||'').trim().split('\n').slice(-1)[0];}
+
+/* 页面加载：若已有模型，直接解锁第二步 */
+window.addEventListener('load',async()=>{
+  try{const j=await(await fetch('/api/model_info')).json();
+    if(j.has_model&&j.model_info){unlockPred(j.model_info.version,j.model_info.features);
+      toast('检测到已保存模型，可直接上传预测文件出结果');}}catch(e){}
+});
+</script>
+</body>
+</html>
