@@ -6,6 +6,9 @@
 <meta name="description" content="从 Excel 数据到二分类训练与批量预测的一站式智能建模工具">
 <meta name="theme-color" content="#30356f">
 <title>ModelFlow 智能建模</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --accent:#5b5ce2;
@@ -329,9 +332,107 @@
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
   }
+
+  /* ============ 玻璃拟态 · 科技主题（覆盖层） ============ */
+  :root{
+    /* 液态玻璃（仿 Apple Liquid Glass）：轻微上浅下深的渐变 + 玻璃感 */
+    --glass:linear-gradient(160deg,rgba(255,255,255,.40),rgba(255,255,255,.20));
+    --glass-strong:linear-gradient(160deg,rgba(255,255,255,.58),rgba(255,255,255,.34));
+    --glass-border:rgba(255,255,255,.6);
+    /* 外阴影 + 顶部高光边 + 内侧上高光 + 内侧下暗影，做出"厚度"和折光 */
+    --glass-shadow:0 10px 34px rgba(40,55,95,.16),
+                   0 1px 0 rgba(255,255,255,.55),
+                   inset 0 1px 0 rgba(255,255,255,.75),
+                   inset 0 -8px 22px rgba(255,255,255,.10),
+                   inset 0 0 0 1px rgba(255,255,255,.18);
+    --glass-blur:blur(26px) saturate(1.8);
+    --mono:"JetBrains Mono","Roboto Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  body{
+    background:
+      url('/static/bg.jpg') center center / cover no-repeat fixed,
+      #eaf2ff;
+  }
+  /* 用了图片背景，去掉网格与光斑，避免视觉打架 */
+  body::before,body::after{content:none!important;display:none!important}
+  .main{position:relative;z-index:1;background:rgba(255,255,255,.30);
+    backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);
+    border:1px solid rgba(255,255,255,.65);
+    box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.55)}
+  .top{background:rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.5);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+  /* 卡片统一液态玻璃化 */
+  .panel,.box,.optcard,.hcard,.modal-win{
+    background:var(--glass)!important;
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border)!important;box-shadow:var(--glass-shadow)!important}
+  details.box{background:var(--glass)!important}
+  .settings-aside{background:var(--glass)!important;border:1px solid var(--glass-border)!important;
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    box-shadow:var(--glass-shadow)!important}
+  select,input[type=text]{background:rgba(255,255,255,.62)!important;backdrop-filter:blur(6px);
+    border-color:rgba(120,130,160,.35)!important}
+  /* 输入框/下拉更圆润、更舒展 */
+  select,input,textarea{
+    border-radius:16px!important;min-height:46px;padding:10px 16px;
+    border-color:rgba(120,130,160,.30)!important}
+  .model-badge{background:rgba(255,255,255,.5);border-color:var(--glass-border)}
+  .fileinfo,.banner{backdrop-filter:blur(8px)}
+  /* 发光点缀 */
+  .ph .b{box-shadow:0 0 10px rgba(91,92,226,.65)}
+  .progress span.on{box-shadow:0 0 8px rgba(91,92,226,.6)}
+  .btn.primary{box-shadow:0 8px 22px rgba(91,92,226,.35),inset 0 0 0 1px rgba(255,255,255,.28)}
+  .btn.primary:hover{box-shadow:0 12px 32px rgba(91,92,226,.5)}
+  .btn.green{box-shadow:0 8px 22px rgba(21,154,107,.32),inset 0 0 0 1px rgba(255,255,255,.25)}
+  .chip.on{box-shadow:0 0 12px rgba(91,92,226,.45)}
+  .donut{box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 0 26px rgba(91,92,226,.22)}
+  .donut .hole{background:#fdfbf8!important;box-shadow:0 0 0 1px rgba(0,0,0,.04)}
+  .hcard:hover{box-shadow:0 20px 46px rgba(91,92,226,.22)!important}
+  /* 数字/技术信息用等宽字体 */
+  .donut .hole b,#dTotal,.thbadge,.kv b,.model-badge,.stepline,.tag2,#previewBody td{
+    font-family:var(--mono);letter-spacing:-.01em}
+  /* ===== 所有控件统一玻璃质感 ===== */
+  .btn.ghost{background:var(--glass)!important;backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border)!important;
+    box-shadow:var(--glass-shadow)!important;color:#3a4256}
+  .btn.ghost:hover{background:var(--glass-strong)!important}
+  .btn.primary{background:linear-gradient(160deg,rgba(91,92,226,.88),rgba(115,116,234,.72))!important;
+    backdrop-filter:blur(8px) saturate(1.4);border:1px solid rgba(255,255,255,.4)!important}
+  .btn.green{background:linear-gradient(160deg,rgba(20,146,104,.88),rgba(34,174,132,.72))!important;
+    backdrop-filter:blur(8px) saturate(1.4);border:1px solid rgba(255,255,255,.4)!important}
+  .backbtn,.help,.model-badge{background:rgba(255,255,255,.32)!important;
+    backdrop-filter:blur(10px) saturate(1.4);border:1px solid var(--glass-border)!important}
+  .chip{background:rgba(255,255,255,.34)!important;backdrop-filter:blur(10px) saturate(1.4);
+    border:1px solid var(--glass-border)!important;color:#4a4bb0}
+  .chip.on{background:linear-gradient(160deg,rgba(91,92,226,.85),rgba(91,92,226,.62))!important;
+    border-color:rgba(255,255,255,.5)!important;color:#fff}
+  .drop{background:var(--glass)!important;backdrop-filter:var(--glass-blur);
+    -webkit-backdrop-filter:var(--glass-blur);border:1.5px dashed rgba(120,120,220,.55)!important}
+  .fileinfo,.banner{background:rgba(255,255,255,.32)!important;backdrop-filter:blur(10px) saturate(1.3);
+    border:1px solid var(--glass-border)!important}
+  .thbadge{background:rgba(255,255,255,.5)!important;backdrop-filter:blur(6px);color:var(--accent-strong)}
+  .tag2{backdrop-filter:blur(6px)}
+  .tg{background:rgba(120,130,160,.35)!important;backdrop-filter:blur(6px)}
+  .tg.on{background:linear-gradient(160deg,rgba(91,92,226,.9),rgba(91,92,226,.68))!important}
+  .table-wrap{background:rgba(255,255,255,.22)!important;backdrop-filter:blur(10px) saturate(1.3);
+    border:1px solid var(--glass-border)!important}
+  .toast{background:rgba(28,34,50,.55)!important;backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid rgba(255,255,255,.18)}
+  .tipbubble{background:rgba(28,34,50,.6)!important;backdrop-filter:blur(14px) saturate(1.5)}
+  /* 表头/浮窗玻璃化 */
+  th{background:rgba(255,255,255,.5)!important;backdrop-filter:blur(8px) saturate(1.4)}
+  .modal-body th{background:rgba(255,255,255,.62)!important}
+  /* 文字加深，避免与浅色背景混在一起（改用近黑色，提高可读性） */
+  :root{--ink:#0d1524;--sub:#2f3b4b;--muted:#45505f}
+  body,.hcard p,.page-head p,.section-heading p,.sub,.kv,.leg,td,.map,.box .bt,.row label,
+  .brandcopy h1,.donut .hole small,.modal-head{color:var(--ink)}
+  .sub,.hint,.brandcopy span{color:var(--sub)!important}
+  th{color:#2f3b4b!important}
 </style>
 </head>
 <body>
+<!--LG-START--><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="liquidGlass" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,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" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map"/><feGaussianBlur in="map" stdDeviation="0.4" result="mapb"/><feDisplacementMap in="SourceGraphic" in2="mapb" scale="42" xChannelSelector="R" yChannelSelector="G"/></filter></svg><style>@supports (backdrop-filter:url(#liquidGlass)){.panel,.optcard,.hcard,.modal-win,.stage-panel{backdrop-filter:blur(2px) saturate(1.6) url(#liquidGlass)!important}}</style><!--LG-END-->
+
 <div class="main">
   <div class="top">
     <div class="brand">
@@ -341,7 +442,7 @@
       </div>
     </div>
     <div class="sp"></div>
-    <div class="model-badge" id="modelBadge" title="当前模型状态">
+    <div class="model-badge" id="modelBadge" title="当前模型状态" style="display:none">
       <span id="modelBadgeText">暂无可用模型</span>
     </div>
     <button class="backbtn" id="homeBtn" onclick="goHome()" style="display:none">返回首页</button>
@@ -1045,6 +1146,7 @@ function setModelStat(info){
   document.getElementById('expModelBtn').disabled=!info;
   const badge=document.getElementById('modelBadge');
   const text=document.getElementById('modelBadgeText');
+  badge.style.display=info?'flex':'none';   // 没有模型时不显示这个标签
   badge.classList.toggle('ready',!!info);
   text.textContent=info?`模型 ${info.version} 已就绪`:'暂无可用模型';
 }
