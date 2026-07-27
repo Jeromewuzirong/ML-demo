@@ -57,10 +57,35 @@ _llm_client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL) if (OpenAI and 
 
 
 # ---------------- 工具 ----------------
+KEEP_UPLOADS = 10   # _uploads 里最多保留的最近文件数
+KEEP_RESULTS = 10   # _results 里最多保留的最近文件数
+
+
+def _prune_dir(d, keep, protect=None):
+    """只保留最近修改的 keep 个文件，其余删除；protect 里的文件永不删（防止误删在用的文件）。"""
+    protect = {os.path.abspath(p) for p in (protect or []) if p}
+    try:
+        files = [os.path.join(d, f) for f in os.listdir(d)]
+        files = [p for p in files if os.path.isfile(p)]
+        files.sort(key=os.path.getmtime, reverse=True)
+        for p in files[keep:]:
+            if os.path.abspath(p) in protect:
+                continue
+            try:
+                os.remove(p)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
 def _save_upload(f):
     fid = uuid.uuid4().hex[:8]
     path = os.path.join(UPLOAD_DIR, f"{fid}_{f.filename}")
     f.save(path)
+    # 保留最近若干个，且不删当前训练/预测正在用的文件
+    _prune_dir(UPLOAD_DIR, KEEP_UPLOADS,
+               protect=[path, STATE.get('train_path'), STATE.get('predict_path')])
     return path
 
 
@@ -365,6 +390,7 @@ def _export(df, pred, proba, threshold):
     rid = uuid.uuid4().hex[:8]
     p = os.path.join(RESULT_DIR, f"预测结果_{rid}.xlsx")
     out.to_excel(p, index=False)
+    _prune_dir(RESULT_DIR, KEEP_RESULTS, protect=[p])
     n = int(len(pred)); pos = int((pred == 1).sum()); neg = n - pos
     return {'n': n, 'pos': pos, 'neg': neg,
             'pos_pct': round(pos / n * 100, 1) if n else 0,
