@@ -204,6 +204,8 @@
   .modal-body th,.modal-body td{border:1px solid var(--line);padding:6px 10px;white-space:nowrap;text-align:left}
   .modal-body th{position:sticky;top:0;background:#f3f5f9;font-weight:700;z-index:1}
   .modal-body tbody tr:nth-child(even){background:#fafbfc}
+  .modal-body th.newcol{background:#e9f0ff;color:var(--accent)}
+  .modal-body td.newcol{background:#f4f8ff}
   .chips{display:flex;flex-wrap:wrap;gap:7px}
   .chip{background:var(--chip);border:1px solid var(--chipb);color:#4f50b2;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;user-select:none;transition:.18s ease}
   .chip:hover{background:#e6e6ff;border-color:#c9c9fb;transform:translateY(-1px)}
@@ -459,6 +461,8 @@
               </div>
               <div id="featPreview" class="sub"></div>
               <div id="derivedList" class="sub" style="margin-top:6px"></div>
+              <button class="btn ghost" id="previewDerivedBtn" style="margin-top:8px;display:none"
+                onclick="openDerivedPreview()">预览新特征数据表</button>
             </div>
           </div>
         </div>
@@ -565,9 +569,9 @@
         <div class="panel"><div class="ph"><span class="b"></span>结果分布</div>
           <div class="donutwrap"><div class="donut" id="donut"><div class="hole"><small>总数</small><b id="dTotal">0</b></div></div>
             <div class="leg" id="donutLeg"></div></div></div>
-        <div class="panel"><div class="ph"><span class="b"></span>预测结果预览 <span class="sub" style="font-weight:400">前 10 行</span></div>
-          <div class="table-wrap"><table><thead><tr><th>ID</th><th>预测</th><th>概率</th><th>判断</th></tr></thead>
-            <tbody id="previewBody"><tr><td colspan="4" class="sub">运行后显示…</td></tr></tbody></table></div></div>
+        <div class="panel"><div class="ph"><span class="b"></span>预测结果预览 <span class="sub" style="font-weight:400" id="previewCount">全部</span></div>
+          <div class="table-wrap"><table><thead><tr id="previewHead"><th>ID</th><th>预测</th><th>概率</th><th>判断</th></tr></thead>
+            <tbody id="previewBody"><tr><td colspan="6" class="sub">运行后显示…</td></tr></tbody></table></div></div>
       </div>
       <div class="panel" id="impPanel" style="display:none;margin-top:14px">
         <div class="ph"><span class="b"></span>特征重要性
@@ -575,6 +579,7 @@
         <div id="impBody"></div>
       </div>
       <div class="btns">
+        <button class="btn ghost" onclick="backFromResult()">返回上一步</button>
         <button class="btn ghost" id="expTrainBtn" onclick="dl(trainDL)">导出训练打分</button>
         <button class="btn ghost" id="expModelBtn" onclick="exportModel()">导出模型</button>
         <button class="btn ghost" id="expPredBtn" onclick="dl(predDL)">导出预测结果</button>
@@ -588,7 +593,7 @@
 <div class="modal-mask" id="previewMask" onclick="if(event.target===this)closePreview()">
   <div class="modal-win">
     <div class="modal-head">
-      <div><b>导入文件预览</b> <span class="sub" id="previewMeta"></span></div>
+      <div><b id="previewTitle">导入文件预览</b> <span class="sub" id="previewMeta"></span></div>
       <button class="btn ghost" onclick="closePreview()">关闭</button>
     </div>
     <div class="modal-body" id="filePreviewBody"><div class="sub" style="padding:20px">加载中…</div></div>
@@ -616,6 +621,7 @@ function showScreen(id){
   window.scrollTo(0,0);
 }
 function goHome(){showScreen('scr-home');}
+function backFromResult(){showScreen(window._resultKind==='predict'?'scr-p2':'scr-t2');}
 function startTrain(){showScreen('scr-t1');}
 function startPredict(){enterP1();}
 function goPredict(){enterP1();}
@@ -637,6 +643,7 @@ function pickModel(kind){
   else document.getElementById('p1Next').disabled=!document.getElementById('impFileName').textContent;
 }
 function gotoResult(kind){
+  window._resultKind = kind;   // 记住来源，供"返回上一步"用
   const isTrain = kind==='train';
   document.getElementById('trainResult').style.display = isTrain?'block':'none';
   document.getElementById('expTrainBtn').style.display = isTrain?'inline-flex':'none';
@@ -815,6 +822,7 @@ function adoptFeature(){
 }
 function renderDerived(){
   const box=document.getElementById('derivedList');if(!box)return;
+  const btn=document.getElementById('previewDerivedBtn');if(btn)btn.style.display=S.derived.length?'':'none';
   if(!S.derived.length){box.innerHTML='';return;}
   box.innerHTML='已添加派生特征：';
   S.derived.forEach((d,i)=>{
@@ -879,7 +887,7 @@ async function upPred(f){
   if(!j.ok){toast('失败：'+tail(j.msg));return;}
   const fi=document.getElementById('fiPred');fi.style.display='flex';
   document.getElementById('ftPred').innerHTML=`<b>${j.filename}</b> ｜ ${j.n_rows} 行 ｜ 数据表: ${j.sheet}`;
-  S.mapFeatures=j.features;S.mapCols=j.columns;
+  S.mapFeatures=j.features;S.mapCols=j.columns;S.mapDerived=j.derived||[];
   fillCompare(j.columns);
   renderMap(j.match);document.getElementById('predBtn').disabled=false;
   const miss=j.features.filter(x=>!j.match[x]).length;
@@ -889,7 +897,17 @@ async function upPred(f){
 }
 function renderMap(match){
   const area=document.getElementById('mapArea');area.innerHTML='';
+  const derivedSet=new Set(S.mapDerived||[]);
   S.mapFeatures.forEach(feat=>{
+    // 派生特征：显示"自动计算"，不需要选列
+    if(derivedSet.has(feat)){
+      const wrap=document.createElement('div');wrap.className='map';
+      wrap.innerHTML=`<div>${feat} <span style="color:var(--accent)">★</span></div><div class="sub">由公式自动计算</div>`;
+      const box=document.createElement('div');
+      box.innerHTML='<span class="sub">✓ AI 新特征，预测时按原始字段自动计算</span>';
+      wrap.appendChild(box);area.appendChild(wrap);
+      return;
+    }
     const sel=document.createElement('select');sel.style.width='100%';sel.dataset.feat=feat;
     const om=document.createElement('option');om.value='__MEAN__';om.textContent='（用训练均值填充）';sel.appendChild(om);
     const oz=document.createElement('option');oz.value='__ZERO__';oz.textContent='（不采用 / 置0）';sel.appendChild(oz);
@@ -952,8 +970,25 @@ function showResult(j,srcLabel){
   document.getElementById('donutLeg').innerHTML=
     `<div><span class="d" style="background:var(--accent)"></span>正类(1) <b>${p.pos}</b>（${p.pos_pct}%）</div>`+
     `<div><span class="d" style="background:var(--cyan)"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
-  const tb=document.getElementById('previewBody');tb.innerHTML='';
-  p.preview.forEach(r=>{tb.innerHTML+=`<tr><td>${r.id}</td><td><span class="tag2 ${r.label.includes('1')?'pos':'neg'}">${r.label}</span></td><td>${r.proba}</td><td class="sub">${r.judge}</td></tr>`;});
+  const hasActual = p.preview.length && p.preview[0].actual!==undefined;
+  const head=document.getElementById('previewHead');
+  if(head)head.innerHTML='<th>ID</th><th>预测</th><th>概率</th><th>判断</th>'+(hasActual?'<th>实际</th><th>对比</th>':'');
+  const cnt=document.getElementById('previewCount');if(cnt)cnt.textContent=`全部 ${p.n} 行`;
+  const tb=document.getElementById('previewBody');
+  let html='';
+  p.preview.forEach(r=>{
+    let row=`<tr><td>${r.id}</td><td><span class="tag2 ${r.label.includes('1')?'pos':'neg'}">${r.label}</span></td><td>${r.proba}</td><td class="sub">${r.judge}</td>`;
+    if(hasActual){
+      const av=r.actual||'—';
+      const avCls=String(av).includes('1')?'pos':(String(av).includes('0')?'neg':'');
+      let mark='<span class="sub">—</span>';
+      if(r.correct===true)mark='<span style="color:#16a34a">✓ 正确</span>';
+      else if(r.correct===false)mark='<span style="color:#c0392b">✗ 错误</span>';
+      row+=`<td>${avCls?`<span class="tag2 ${avCls}">${av}</span>`:av}</td><td>${mark}</td>`;
+    }
+    html+=row+'</tr>';
+  });
+  tb.innerHTML=html;
   renderImportance(j.importance);
 }
 function renderImportance(imp){
@@ -978,19 +1013,28 @@ function tail(m){return(m||'').trim().split('\n').slice(-1)[0];}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
 /* ---- 预览导入文件（浮窗）---- */
-async function openPreview(){
-  const mask=document.getElementById('previewMask');mask.classList.add('show');
-  const body=document.getElementById('filePreviewBody');
+function openPreview(){ _openPreview('导入文件预览','/api/preview_train',null); }
+function openDerivedPreview(){
+  if(!S.derived.length){toast('还没有 AI 生成的新特征');return;}
+  _openPreview('新特征数据表预览','/api/preview_derived',{derived:S.derived});
+}
+async function _openPreview(title,url,body){
+  document.getElementById('previewMask').classList.add('show');
+  document.getElementById('previewTitle').textContent=title;
   document.getElementById('previewMeta').textContent='';
-  body.innerHTML='<div class="sub" style="padding:20px">加载中…</div>';
+  const el=document.getElementById('filePreviewBody');
+  el.innerHTML='<div class="sub" style="padding:20px">加载中…</div>';
   try{
-    const j=await(await fetch('/api/preview_train')).json();
-    if(!j.ok){body.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">${esc(tail(j.msg))}</div>`;return;}
-    document.getElementById('previewMeta').textContent=`共 ${j.n_rows} 行 × ${j.n_cols} 列，显示前 ${j.shown} 行`;
-    let h='<table><thead><tr>'+j.columns.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>';
-    h+=j.rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('');
-    body.innerHTML=h+'</tbody></table>';
-  }catch(e){body.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">出错：${esc(e)}</div>`;}
+    const opt=body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{};
+    const j=await(await fetch(url,opt)).json();
+    if(!j.ok){el.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">${esc(tail(j.msg))}</div>`;return;}
+    const meta=`共 ${j.n_rows} 行 × ${j.n_cols} 列，显示前 ${j.shown} 行`;
+    document.getElementById('previewMeta').textContent=meta+((j.new_cols&&j.new_cols.length)?`　（★ 为新增特征列，共 ${j.new_cols.length} 列）`:'');
+    const nc=new Set(j.new_cols||[]);
+    let h='<table><thead><tr>'+j.columns.map(c=>`<th class="${nc.has(c)?'newcol':''}">${esc(c)}${nc.has(c)?' ★':''}</th>`).join('')+'</tr></thead><tbody>';
+    h+=j.rows.map(r=>'<tr>'+r.map((v,i)=>`<td class="${nc.has(j.columns[i])?'newcol':''}">${esc(v)}</td>`).join('')+'</tr>').join('');
+    el.innerHTML=h+'</tbody></table>';
+  }catch(e){el.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">出错：${esc(e)}</div>`;}
 }
 function closePreview(){document.getElementById('previewMask').classList.remove('show');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePreview();});

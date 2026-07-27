@@ -347,16 +347,24 @@ def build_derived(df, spec):
     raise ValueError(f"未知的特征类型：{kind}")
 
 
-def apply_derived(df, derived):
-    """生成所有派生列；返回 (新df, 属于类别列的名字列表)。训练与预测共用。"""
+def apply_derived(df, derived, skip_errors=False):
+    """生成所有派生列；返回 (新df, 类别派生列名, 跳过的派生列名)。训练与预测共用。
+    skip_errors=True 时（预测阶段），若某派生列所需的原始字段在表中缺失，则跳过该列而不报错，
+    交由下游按"缺失特征"用训练均值/全0 处理。"""
     df = df.copy()
-    cat_added = []
+    cat_added, skipped = [], []
     for d in (derived or []):
-        series, is_cat = build_derived(df, d)
+        try:
+            series, is_cat = build_derived(df, d)
+        except Exception:
+            if skip_errors:
+                skipped.append(str(d.get('name')))
+                continue
+            raise
         df[d['name']] = series
         if is_cat:
             cat_added.append(d['name'])
-    return df, cat_added
+    return df, cat_added, skipped
 
 
 def metrics_dict(yt, yp):
@@ -366,27 +374,45 @@ def metrics_dict(yt, yp):
             'f1': round(float(f1_score(yt, yp, zero_division=0)), 4)}
 
 
-def make_preview(df, pred, proba, threshold, limit=10):
+def make_preview(df, pred, proba, threshold, limit=None, actual=None):
+    """limit=None 显示全部行；actual 给定(0/1 序列)时逐行附上实际结果与是否预测正确。"""
     id_col = None
     for c in df.columns:
         if any(k in str(c).lower() for k in ('id', '编号', '序号', '料号', 'name', '名称')):
             id_col = c
             break
+    n = len(df) if limit is None else min(limit, len(df))
+    av = None
+    if actual is not None:
+        av = pd.to_numeric(actual, errors='coerce').reset_index(drop=True)
     rows = []
-    for i in range(min(limit, len(df))):
+    for i in range(n):
         rid = df[id_col].iloc[i] if id_col is not None else (i + 1)
         p = float(proba[i]); lab = int(pred[i])
-        rows.append({'id': str(rid), 'label': '正类(1)' if lab == 1 else '负类(0)',
-                     'proba': round(p, 4),
-                     'judge': f"≥ {threshold} → 1" if p >= threshold else f"< {threshold} → 0"})
+        row = {'id': str(rid), 'label': '正类(1)' if lab == 1 else '负类(0)',
+               'proba': round(p, 4),
+               'judge': f"≥ {threshold} → 1" if p >= threshold else f"< {threshold} → 0"}
+        if av is not None:
+            a = av.iloc[i] if i < len(av) else None
+            if a is None or pd.isna(a):
+                row['actual'] = '—'; row['correct'] = None
+            else:
+                ai = int(a)
+                row['actual'] = '正类(1)' if ai == 1 else '负类(0)'
+                row['correct'] = bool(ai == lab)
+        rows.append(row)
     return rows
 
 
-def _export(df, pred, proba, threshold):
+def _export(df, pred, proba, threshold, actual=None):
     out = df.copy()
     out['预测结果'] = np.where(pred == 1, '正类', '负类')
     out['预测y值'] = pred
     out['y=1的概率'] = np.round(proba, 4)
+    if actual is not None:
+        av = pd.to_numeric(actual, errors='coerce').reset_index(drop=True)
+        out['预测是否正确'] = ['' if pd.isna(av.iloc[i]) else ('✓' if int(av.iloc[i]) == int(pred[i]) else '✗')
+                          for i in range(len(pred))]
     rid = uuid.uuid4().hex[:8]
     p = os.path.join(RESULT_DIR, f"预测结果_{rid}.xlsx")
     out.to_excel(p, index=False)
@@ -395,7 +421,7 @@ def _export(df, pred, proba, threshold):
     return {'n': n, 'pos': pos, 'neg': neg,
             'pos_pct': round(pos / n * 100, 1) if n else 0,
             'neg_pct': round(neg / n * 100, 1) if n else 0,
-            'preview': make_preview(df, pred, proba, threshold),
+            'preview': make_preview(df, pred, proba, threshold, actual=actual),
             'download_id': rid}
 
 
@@ -493,7 +519,7 @@ def api_train():
             return jsonify(ok=False, msg="请先上传训练文件")
         df = smart_read_excel(path, sheet_name=_sheets(path)[0])
         # 先把 AI 派生列算出来加进 df（拼类别的自动并入类别列选择）
-        df, cat_added = apply_derived(df, derived)
+        df, cat_added, _ = apply_derived(df, derived)
         cat_sel = list(cat_sel) + [c for c in cat_added if c not in cat_sel]
         y_name, feats = auto_detect_xy(df, target_col=target, feature_cols=features)
 
@@ -623,6 +649,29 @@ def api_preview_train():
         return jsonify(ok=False, msg=traceback.format_exc())
 
 
+# ---------------- 预览"应用新特征后"的数据表 ----------------
+@app.route('/api/preview_derived', methods=['POST'])
+def api_preview_derived():
+    try:
+        cfg = request.get_json(force=True)
+        derived = cfg.get('derived') or []
+        path = STATE.get('train_path')
+        if not path or not os.path.exists(path):
+            return jsonify(ok=False, msg="请先上传训练文件")
+        df = smart_read_excel(path, sheet_name=_sheets(path)[0])
+        base_cols = [str(c) for c in df.columns]
+        df2, _, _ = apply_derived(df, derived)          # 配置阶段原始列都在，正常算
+        cols = [str(c) for c in df2.columns]
+        new_cols = [c for c in cols if c not in base_cols]
+        head = df2.head(50)
+        rows = [['' if pd.isna(v) else str(v) for v in r]
+                for r in head.itertuples(index=False, name=None)]
+        return jsonify(ok=True, columns=cols, rows=rows, new_cols=new_cols,
+                       n_rows=int(len(df2)), n_cols=len(cols), shown=len(rows))
+    except Exception:
+        return jsonify(ok=False, msg=traceback.format_exc())
+
+
 # ---------------- 步骤3：上传预测文件 ----------------
 @app.route('/api/upload_predict', methods=['POST'])
 def api_upload_predict():
@@ -648,7 +697,8 @@ def api_upload_predict():
         return jsonify(ok=True, filename=f.filename, size=os.path.getsize(path),
                        n_rows=int(len(df)), columns=cols, sheet=sheet,
                        features=feats, match=match, model_version=info['version'],
-                       cat_fields=cat_cols, cat_missing=cat_missing)
+                       cat_fields=cat_cols, cat_missing=cat_missing,
+                       derived=sorted(derived_names))
     except Exception:
         return jsonify(ok=False, msg=traceback.format_exc())
 
@@ -671,15 +721,21 @@ def api_predict():
             return jsonify(ok=False, msg="请先上传预测文件")
         feats = bundle['features']
         _, df = _best_sheet(path, feats)
-        # 用训练时保存的同一套 spec 重算派生列（保证训练/预测一致）
-        df, _ = apply_derived(df, bundle.get('derived'))
+        # 用训练时保存的同一套 spec 重算派生列（保证训练/预测一致）；
+        # 若预测文件缺少某派生特征所需的原始字段，则跳过它、按缺失特征处理（不报错）
+        df, _, skipped_derived = apply_derived(df, bundle.get('derived'), skip_errors=True)
 
         # 按映射把预测文件的列对齐到模型字段
         # mapping 值可为：某列名 / '__MEAN__'(训练均值) / '__ZERO__'(置0/不采用)
         use = pd.DataFrame(index=df.index)
         fillv = bundle.get('fill_values', {})
+        derived_names = {str(d.get('name')) for d in bundle.get('derived', [])}
         used_mean, used_zero = [], []
         for feat in feats:
+            # 派生特征：无视映射，直接用公式自动算出的值（缺原始字段时上面已跳过→用训练均值）
+            if feat in derived_names:
+                use[feat] = df[feat] if feat in df.columns else fillv.get(feat, 0.0)
+                continue
             val = mapping.get(feat)
             if val == '__ZERO__':
                 use[feat] = 0.0; used_zero.append(feat)
@@ -693,6 +749,8 @@ def api_predict():
         parts = []
         if used_mean: parts.append(f"用训练均值填充：{used_mean}")
         if used_zero: parts.append(f"置0(不采用)：{used_zero}")
+        if skipped_derived:
+            parts.append(f"派生特征缺少所需原始字段、已按训练均值处理：{skipped_derived}")
 
         # 类别列（one-hot）：按同名列从预测文件取原始值；缺失列/新类别 → 该行 one-hot 全 0
         categorical = bundle.get('categorical', {}) or {}
@@ -720,9 +778,12 @@ def api_predict():
 
         # 可选：与预测文件里指定的对比列比较，给出准确率
         compare = None
+        actual_series = None   # 传给 _export/make_preview 做逐行对比；无实际结果列则保持 None
         ccol = cfg.get('compare_col')
         if ccol and ccol in df.columns:
             ab = _binary_for_compare(df[ccol])
+            if ab is not None:
+                actual_series = ab
             if ab is None:
                 compare = {'col': str(ccol), 'error': '该列无法转成 0/1（取值超过两种），无法对比'}
             else:
@@ -740,7 +801,7 @@ def api_predict():
                                'actual_pos': int((a == 1).sum()), 'actual_neg': int((a == 0).sum())}
 
         return jsonify(ok=True, threshold=threshold, model_version=bundle.get('version', '-'),
-                       predict=_export(df, pred, proba, threshold),
+                       predict=_export(df, pred, proba, threshold, actual=actual_series),
                        compare=compare, warn=warn, predict_source="预测文件")
     except Exception:
         return jsonify(ok=False, msg=traceback.format_exc())
