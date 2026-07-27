@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+_uploads/
+_results/
+_model.pkl
+.agents/

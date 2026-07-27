@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: classification-platform
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # gunicorn 拉起 Flask 的 app 对象；绑定 Render 提供的 $PORT；
+    # 训练可能较慢，把 worker 超时放宽到 120 秒
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"

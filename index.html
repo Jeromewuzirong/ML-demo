@@ -3,209 +3,657 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智能二分类建模平台</title>
+<meta name="description" content="从 Excel 数据到二分类训练与批量预测的一站式智能建模工具">
+<meta name="theme-color" content="#30356f">
+<title>ModelFlow 智能建模</title>
 <style>
-  :root{--accent:#2f6bff;--green:#16a34a;--ink:#1f2d3d;--sub:#6b7c93;--line:#e5ebf3;
-    --bg:#f4f7fb;--panel:#fff;--chip:#eef4ff;--chipb:#cfe0ff;}
+  :root{
+    --accent:#5b5ce2;
+    --accent-strong:#4748c9;
+    --accent-soft:#efefff;
+    --cyan:#12b8b0;
+    --green:#159a6b;
+    --green-soft:#eaf8f2;
+    --danger:#d45b67;
+    --ink:#18212f;
+    --sub:#687386;
+    --muted:#8f99a8;
+    --line:#e4e8ef;
+    --line-strong:#d5dae4;
+    --bg:#f2f4f8;
+    --panel:#ffffff;
+    --chip:#f2f3ff;
+    --chipb:#dcdcff;
+    --shadow:0 24px 70px rgba(28,39,60,.12);
+    --shadow-soft:0 10px 30px rgba(31,42,68,.07);
+  }
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Microsoft YaHei","PingFang SC",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
-  .app{display:flex;min-height:100vh}
-  .side{width:180px;background:linear-gradient(180deg,#0f2a5e,#0b1f47);color:#cdd8ef;display:flex;flex-direction:column;flex-shrink:0}
-  .logo{display:flex;gap:10px;align-items:center;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-  .logo .ic{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#3d7bff,#1e5bd6);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
-  .logo b{color:#fff;font-size:14px;line-height:1.3}
-  .nav{padding:12px 10px;display:flex;flex-direction:column;gap:4px}
-  .nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#b9c7e6}
-  .nav a.on{background:linear-gradient(90deg,#2f6bff,#3d7bff);color:#fff}
-  .side .foot{margin-top:auto;padding:16px;color:#8ea3cf;font-size:12px;text-align:center;line-height:1.7;border-top:1px solid rgba(255,255,255,.08)}
-  .main{flex:1;min-width:0;display:flex;flex-direction:column}
-  .top{background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:16px}
-  .top h1{font-size:17px;margin:0;font-weight:800}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+    color:var(--ink);
+    font-size:15px;
+    background:
+      radial-gradient(circle at 12% 8%,rgba(91,92,226,.13),transparent 28%),
+      radial-gradient(circle at 90% 82%,rgba(18,184,176,.10),transparent 25%),
+      var(--bg);
+    padding:22px;
+  }
+  button,input,select{font:inherit}
+  button,.drop,.hcard,.chip,.optcard,.tg{ -webkit-tap-highlight-color:transparent}
+  button:focus-visible,input:focus-visible,select:focus-visible,.drop:focus-visible,.hcard:focus-visible,.chip:focus-visible,.tg:focus-visible{
+    outline:3px solid rgba(91,92,226,.24);
+    outline-offset:2px;
+  }
+  .main{
+    max-width:1440px;
+    width:100%;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100vh - 44px);
+    overflow:hidden;
+    background:rgba(248,249,252,.94);
+    border:1px solid rgba(255,255,255,.9);
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(14px);
+  }
+  .top{
+    min-height:78px;
+    padding:0 34px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    background:rgba(255,255,255,.88);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(16px);
+  }
+  .brand{display:flex;align-items:center;min-width:0}
+  .brandcopy{min-width:0}
+  .brandcopy h1{font-size:16px;line-height:1.2;margin:0;font-weight:800;letter-spacing:.01em}
+  .brandcopy span{display:block;margin-top:3px;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
   .top .sp{flex:1}
-  .top .user{display:flex;gap:8px;align-items:center;font-weight:600}
-  .top .user .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3d7bff,#1e5bd6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
-  .steps{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .step{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:12.5px}
-  .step .n{width:22px;height:22px;border-radius:50%;background:#dfe7f3;color:#7f8fa8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
-  .step.on{color:var(--accent);font-weight:700}
-  .step.on .n{background:var(--accent);color:#fff}
-  .step.done .n{background:var(--green);color:#fff}
-  .step .bar{width:46px;height:2px;background:#dfe7f3}
-  .wrap{padding:16px 22px;display:flex;flex-direction:column;gap:14px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .panel.lock{opacity:.55}
-  .ph{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:12px}
-  .ph .b{width:6px;height:16px;border-radius:3px;background:var(--accent)}
-  .ph .tag{font-size:11px;font-weight:700;color:#fff;background:var(--accent);border-radius:10px;padding:1px 9px}
-  .ph .tag.g{background:var(--green)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-  .sub{color:var(--sub);font-size:12px}
-  .drop{border:2px dashed #b7ccf2;border-radius:10px;padding:22px;text-align:center;color:var(--accent);cursor:pointer;background:#f7faff}
-  .drop:hover{background:#eef4ff}
-  .drop .big{font-size:14px;font-weight:700;margin-top:4px}
-  .fileinfo{margin-top:10px;display:none;align-items:center;gap:10px;background:#f3f7ff;border:1px solid var(--chipb);border-radius:8px;padding:8px 12px;font-size:12px}
-  .fileinfo .x{width:26px;height:26px;background:#1a7f37;color:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-  .cols{display:grid;grid-template-columns:1fr auto 1fr 1fr;gap:12px}
-  .box{border:1px dashed #cdd9ec;border-radius:9px;padding:10px;min-height:96px;background:#fbfdff}
-  .box .bt{font-weight:700;font-size:12.5px;margin-bottom:8px;color:#33507d}
-  .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{background:var(--chip);border:1px solid var(--chipb);color:#274a86;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer;user-select:none}
-  .chip:hover{background:#dbe8ff}
-  .chip .x{margin-left:5px;color:#7a93c4;font-weight:700}
-  .arrow{display:flex;align-items:center;justify-content:center;color:var(--sub);border:1px dashed #cdd9ec;border-radius:9px;font-size:11px;background:#fbfdff;padding:4px}
-  select,input[type=text]{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink)}
-  .tg{position:relative;width:40px;height:22px;border-radius:12px;background:#cfd8e6;cursor:pointer}
+  .model-badge{
+    display:flex;
+    align-items:center;
+    color:var(--sub);
+    background:#f7f8fb;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:8px 13px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .model-badge.ready{color:#167452;background:var(--green-soft);border-color:#ccecdf}
+  .backbtn{
+    background:#fff;
+    border:1px solid var(--line);
+    color:#4b5668;
+    border-radius:10px;
+    padding:9px 13px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:700;
+    transition:.2s ease;
+  }
+  .backbtn:hover{border-color:var(--line-strong);background:#f7f8fb;transform:translateX(-2px)}
+  .wrap{padding:38px 42px 44px;display:flex;flex:1;flex-direction:column;gap:20px}
+  .screen{display:none;animation:screenIn .34s ease both}
+  @keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .section-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:10px 2px 18px}
+  .section-heading h3{margin:0;font-size:19px}
+  .section-heading p{margin:5px 0 0;color:var(--sub);font-size:13px}
+  .section-heading .hint{color:var(--muted);font-size:12px}
+  .homecards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .hcard{
+    display:block;
+    min-height:148px;
+    padding:28px;
+    text-align:left;
+    cursor:pointer;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:var(--shadow-soft);
+    transition:.24s ease;
+  }
+  .hcard:hover{border-color:#c9cafc;box-shadow:0 18px 40px rgba(47,52,95,.12);transform:translateY(-3px)}
+  .hcard h3{margin:0 0 7px;font-size:19px}
+  .hcard p{margin:0;color:var(--sub);font-size:13px;line-height:1.65}
+  .stepline{color:var(--accent);font-size:12px;margin-bottom:12px;font-weight:800;letter-spacing:.05em}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px}
+  .page-head h2{margin:0;font-size:28px;letter-spacing:-.035em}
+  .page-head p{margin:8px 0 0;color:var(--sub);font-size:14px}
+  .progress{display:flex;align-items:center;gap:7px;padding-top:3px}
+  .progress span{width:40px;height:5px;border-radius:6px;background:#e3e6ed}
+  .progress span.on{background:var(--accent)}
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px;
+    box-shadow:var(--shadow-soft);
+  }
+  .stage-panel{padding:32px}
+  .ph{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px;margin-bottom:16px}
+  .ph .b{width:5px;height:17px;border-radius:4px;background:var(--accent)}
+  .ph .tag{font-size:10px;font-weight:800;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:4px 9px;letter-spacing:.04em}
+  .ph .tag.g{color:#147957;background:var(--green-soft)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid3{display:grid;grid-template-columns:.9fr .8fr 1.3fr;gap:18px}
+  .sub{color:var(--sub);font-size:13px;line-height:1.6}
+  .drop{
+    position:relative;
+    min-height:190px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:42px 30px;
+    text-align:center;
+    color:var(--accent);
+    cursor:pointer;
+    background:linear-gradient(145deg,#fbfbff,#f5f6ff);
+    border:1.5px dashed #bfc1f5;
+    border-radius:16px;
+    transition:.22s ease;
+  }
+  .drop:hover,.drop.dragging{background:#f0f0ff;border-color:var(--accent);transform:translateY(-2px)}
+  .drop .big{font-size:16px;font-weight:800;margin:0 0 7px;color:#31365a}
+  .fileinfo{
+    margin-top:12px;
+    display:none;
+    align-items:center;
+    gap:12px;
+    background:var(--green-soft);
+    border:1px solid #ccecdf;
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:12px;
+    color:#28634f;
+  }
+  .cols{display:grid;grid-template-columns:1fr 1fr .8fr;gap:12px}
+  .box{border:1px solid var(--line);border-radius:14px;padding:16px;min-height:134px;background:#fafbfc}
+  .box .bt{font-weight:800;font-size:13px;margin-bottom:11px;color:#424d60}
+  /* 可折叠 box：高度自适应，折叠时约一行 */
+  details.box{min-height:0;padding:12px 16px}
+  details.box>summary{margin-bottom:0}
+  details.box[open]>summary{margin-bottom:11px}
+  /* 问号帮助图标 + 气泡 */
+  .help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    border:1px solid var(--line);color:#7a8699;font-size:11px;font-weight:700;cursor:pointer;margin-left:6px;
+    vertical-align:middle;line-height:1;user-select:none}
+  .help:hover{color:var(--accent);border-color:var(--accent)}
+  .tipbubble{position:absolute;z-index:9999;max-width:280px;background:#2b3444;color:#fff;font-size:12px;
+    font-weight:400;line-height:1.55;padding:8px 11px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);
+    opacity:0;transition:opacity .45s ease;pointer-events:none}
+  .tipbubble.show{opacity:1}
+  /* 预览浮窗 */
+  .modal-mask{position:fixed;inset:0;background:rgba(20,26,38,.45);display:none;align-items:center;
+    justify-content:center;z-index:10000;padding:24px}
+  .modal-mask.show{display:flex}
+  .modal-win{background:#fff;border-radius:16px;max-width:1040px;width:100%;max-height:84vh;
+    display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;
+    border-bottom:1px solid var(--line)}
+  .modal-body{overflow:auto}
+  .modal-body table{border-collapse:collapse;width:100%;font-size:12px}
+  .modal-body th,.modal-body td{border:1px solid var(--line);padding:6px 10px;white-space:nowrap;text-align:left}
+  .modal-body th{position:sticky;top:0;background:#f3f5f9;font-weight:700;z-index:1}
+  .modal-body tbody tr:nth-child(even){background:#fafbfc}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{background:var(--chip);border:1px solid var(--chipb);color:#4f50b2;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;user-select:none;transition:.18s ease}
+  .chip:hover{background:#e6e6ff;border-color:#c9c9fb;transform:translateY(-1px)}
+  .chip .x{margin-left:5px;color:#8889c9;font-weight:800}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.on:hover{background:var(--accent-strong)}
+  select,input[type=text]{
+    min-height:42px;
+    border:1px solid var(--line-strong);
+    border-radius:10px;
+    padding:9px 11px;
+    font-size:13px;
+    background:#fff;
+    color:var(--ink);
+    transition:.18s ease;
+  }
+  select:hover,input[type=text]:hover{border-color:#bfc5d2}
+  select:focus,input[type=text]:focus{border-color:var(--accent)}
+  input[type=range]{accent-color:var(--accent)}
+  .tg{position:relative;width:44px;height:24px;flex:0 0 auto;border-radius:14px;background:#d3d8e2;cursor:pointer;transition:.2s ease}
   .tg.on{background:var(--accent)}
-  .tg::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
-  .tg.on::after{left:20px}
-  .row{display:flex;align-items:center;gap:10px;margin:8px 0}
-  .row label{width:92px;color:var(--sub)}
-  .thbadge{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-weight:700}
-  .btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-  .btn{border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
-  .btn.primary{background:linear-gradient(90deg,#2f6bff,#3d7bff);color:#fff}
-  .btn.green{background:linear-gradient(90deg,#16a34a,#20b358);color:#fff}
-  .btn.ghost{background:#fff;border:1px solid var(--line);color:#33507d}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .banner{margin-top:10px;background:#eef7ee;border:1px solid #bfe3c9;border-radius:8px;padding:8px 12px;font-size:12px;color:#1a7f37;line-height:1.6}
-  .map{display:grid;grid-template-columns:1fr 24px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px}
-  .map .bad{color:#c0392b}
-  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .tg::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:.2s ease}
+  .tg.on::after{left:23px}
+  .row{display:flex;align-items:center;gap:12px;margin:13px 0}
+  .row label{width:96px;color:#535e70;font-size:13px;font-weight:700}
+  .thbadge{display:inline-block;min-width:55px;text-align:center;background:var(--accent-soft);color:var(--accent-strong);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:800}
+  .settings-shell{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px}
+  .settings-aside{background:#fafbfc;border:1px solid var(--line);border-radius:14px;padding:18px}
+  .settings-main{min-width:0}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px}
+  .btn{
+    min-height:44px;
+    border:none;
+    border-radius:11px;
+    padding:11px 18px;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+    display:inline-flex;
+    justify-content:center;
+    gap:8px;
+    align-items:center;
+    white-space:nowrap;
+    flex-shrink:0;
+    transition:.2s ease;
+  }
+  .btn.primary{background:linear-gradient(135deg,var(--accent),#7374ea);color:#fff;box-shadow:0 9px 20px rgba(91,92,226,.22)}
+  .btn.primary:hover{background:linear-gradient(135deg,var(--accent-strong),#6768de);transform:translateY(-1px);box-shadow:0 12px 24px rgba(91,92,226,.28)}
+  .btn.green{background:linear-gradient(135deg,#149268,#22ae84);color:#fff;box-shadow:0 9px 20px rgba(21,154,107,.2)}
+  .btn.green:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(21,154,107,.26)}
+  .btn.ghost{background:#fff;border:1px solid var(--line-strong);color:#4f596a}
+  .btn.ghost:hover{border-color:#bfc5d1;background:#f8f9fb;transform:translateY(-1px)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none}
+  .optcard{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:15px;padding:20px;margin:12px 0;cursor:pointer;background:#fff;transition:.2s ease}
+  .optcard:hover{border-color:#c8c9f8;background:#fafaff}
+  .optcard.sel{border-color:var(--accent);background:#f6f6ff;box-shadow:0 0 0 3px rgba(91,92,226,.08)}
+  .optcard input[type=radio]{margin-top:3px;width:17px;height:17px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)}
+  .optcard .ot{font-weight:800;font-size:14px;margin-bottom:4px}
+  .banner{margin:0 0 16px;background:var(--green-soft);border:1px solid #ccecdf;border-radius:12px;padding:12px 14px;font-size:12px;color:#1d7454;line-height:1.7}
+  .banner.warn{background:#fff7e8;border-color:#f1dfba;color:#9a6b00}
+  .map{display:grid;grid-template-columns:minmax(90px,.8fr) 46px minmax(150px,1.2fr);gap:8px;align-items:center;margin:8px 0;font-size:12px}
+  .map .bad{color:var(--danger)}
+  .kv{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #edf0f4;font-size:12px}
+  .kv:last-child{border-bottom:0}
+  .kv b{text-align:right}
   .status-ok{color:var(--green);font-weight:800}
-  .donutwrap{display:flex;align-items:center;gap:16px;justify-content:center}
-  .donut{width:120px;height:120px;border-radius:50%;position:relative;background:conic-gradient(var(--accent) 0 0,#16a34a 0 0)}
-  .donut .hole{position:absolute;inset:18px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .donutwrap{display:flex;align-items:center;gap:18px;justify-content:center;min-height:182px}
+  .donut{width:138px;height:138px;border-radius:50%;position:relative;background:conic-gradient(var(--accent) 0 0,var(--cyan) 0 0);box-shadow:inset 0 0 0 1px rgba(0,0,0,.03)}
+  .donut .hole{position:absolute;inset:24px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(0,0,0,.025)}
   .donut .hole small{color:var(--sub);font-size:11px}
-  .donut .hole b{font-size:20px}
-  .leg{font-size:12.5px;line-height:1.9}
-  .leg .d{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+  .donut .hole b{font-size:25px;letter-spacing:-.04em}
+  .leg{font-size:12px;line-height:2.15}
+  .leg .d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+  .table-wrap{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:11px}
   table{width:100%;border-collapse:collapse;font-size:12px}
-  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:center}
-  th{color:var(--sub);font-weight:600;background:#f8fbff}
-  .tag2{padding:1px 8px;border-radius:10px;font-size:11px}
-  .tag2.pos{background:#e8f0ff;color:#2f6bff}
-  .tag2.neg{background:#eafaf0;color:#16a34a}
-  .toast{position:fixed;top:16px;right:16px;background:#1f2d3d;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:none;z-index:99;max-width:460px}
+  th,td{border-bottom:1px solid var(--line);padding:11px 9px;text-align:center;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  th{position:sticky;top:0;color:var(--sub);font-weight:700;background:#f8f9fb;z-index:1}
+  tbody tr:hover{background:#fafaff}
+  .tag2{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700}
+  .tag2.pos{background:var(--accent-soft);color:var(--accent)}
+  .tag2.neg{background:var(--green-soft);color:var(--green)}
+  .toast{position:fixed;top:22px;right:22px;background:#1d2434;color:#fff;padding:13px 17px;border-radius:12px;font-size:12px;line-height:1.5;box-shadow:0 16px 40px rgba(0,0,0,.22);display:none;z-index:99;max-width:460px}
   .spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;display:inline-block;animation:sp .7s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+  @media (max-width:1050px){
+    body{padding:12px}
+    .main{min-height:calc(100vh - 24px);border-radius:19px}
+    .grid3{grid-template-columns:1fr 1fr}
+    .grid3>.panel:last-child{grid-column:1/-1}
+    .settings-shell{grid-template-columns:1fr}
+    .cols{grid-template-columns:1fr 1fr}
+    .cols .box:last-child{grid-column:1/-1}
+  }
+  @media (max-width:760px){
+    body{padding:0;background:#f7f8fb}
+    .main{min-height:100vh;border:0;border-radius:0;box-shadow:none}
+    .top{min-height:68px;padding:0 18px;gap:10px}
+    .brandcopy span,.model-badge span{display:none}
+    .model-badge{padding:9px}
+    .backbtn{padding:8px 10px}
+    .wrap{padding:24px 16px 32px}
+    .homecards,.grid2,.grid3{grid-template-columns:1fr}
+    .grid3>.panel:last-child{grid-column:auto}
+    .hcard{min-height:132px;padding:22px}
+    .section-heading{align-items:flex-start;flex-direction:column;margin-top:4px}
+    .section-heading .hint{display:none}
+    .page-head{flex-direction:column;margin-bottom:16px}
+    .page-head h2{font-size:24px}
+    .stage-panel,.panel{padding:20px}
+    .drop{min-height:170px;padding:30px 20px}
+    .cols{grid-template-columns:1fr}
+    .row{align-items:flex-start;flex-wrap:wrap}
+    .row label{width:100%}
+    .row .sub{width:100%}
+    .btns{display:grid;grid-template-columns:1fr 1fr}
+    .btns .btn:only-child{grid-column:1/-1}
+    .map{grid-template-columns:1fr 42px 1.2fr}
+    .donutwrap{justify-content:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+  }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="side">
-    <div class="logo"><div class="ic">AI</div><b>智能二分类<br>建模平台</b></div>
-    <nav class="nav"><a class="on">🏠 首页</a><a>🗂 任务中心</a><a>🧊 模型管理</a><a>📊 结果中心</a><a>⚙ 系统设置</a></nav>
-    <div class="foot">让数据驱动决策<br>让模型创造价值</div>
-  </aside>
-  <div class="main">
-    <div class="top"><h1>智能二分类建模平台</h1><div class="sp"></div>
-      <span class="user"><span class="av">用</span>用户 ▾</span></div>
-    <div class="steps" id="steps">
-      <div class="step on" data-s="1"><span class="n">1</span>上传训练文件</div><div class="bar"></div>
-      <div class="step" data-s="2"><span class="n">2</span>训练并保存模型</div><div class="bar"></div>
-      <div class="step" data-s="3"><span class="n">3</span>上传预测文件</div><div class="bar"></div>
-      <div class="step" data-s="4"><span class="n">4</span>输出预测结果</div>
+<div class="main">
+  <div class="top">
+    <div class="brand">
+      <div class="brandcopy">
+        <h1>ModelFlow 智能建模</h1>
+        <span>Binary classification studio</span>
+      </div>
     </div>
-    <div class="wrap">
+    <div class="sp"></div>
+    <div class="model-badge" id="modelBadge" title="当前模型状态">
+      <span id="modelBadgeText">暂无可用模型</span>
+    </div>
+    <button class="backbtn" id="homeBtn" onclick="goHome()" style="display:none">返回首页</button>
+  </div>
+  <div class="wrap">
 
-      <!-- ===== 第一步：训练 ===== -->
-      <div class="panel" id="trainPanel">
-        <div class="ph"><span class="b"></span>第一步 · 训练文件 <span class="tag">训练模型</span></div>
-        <div class="grid2">
-          <div>
-            <div class="drop" id="dropTrain"><div style="font-size:22px">⬆️</div>
-              <div class="big">点击或拖入【训练用】Excel</div>
-              <div class="sub">需含目标列 Y（二值 0/1、是否、Y/N 均可）</div></div>
-            <input type="file" id="fileTrain" accept=".xlsx,.xls" style="display:none">
-            <div class="fileinfo" id="fiTrain"><div class="x">XLS</div><div id="ftTrain"></div></div>
-          </div>
-          <div>
-            <div class="ph" style="font-size:13px"><span class="b"></span>预处理与参数</div>
-            <div class="row"><label>缺失值</label>
-              <select id="impute"><option value="mean">均值填充</option><option value="median">中位数填充</option><option value="zero">0 填充</option></select>
-              <label style="width:auto">标准化</label><div class="tg" id="scalerTg" onclick="this.classList.toggle('on')"></div><span class="sub">（业务打分建议关闭）</span>
+    <!-- ===== 首页 ===== -->
+    <div class="screen" id="scr-home">
+      <div class="section-heading">
+        <div>
+          <h3>选择你的工作方式</h3>
+          <p>新建模型，或使用已有模型快速处理新数据</p>
+        </div>
+        <span class="hint">所有文件仅在本机处理</span>
+      </div>
+      <div class="homecards">
+        <div class="hcard" role="button" tabindex="0" onclick="startTrain()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startTrain()}">
+          <div><h3>训练一个新模型</h3><p>上传带有目标结果的训练集，配置字段后完成训练并保存模型。</p></div>
+        </div>
+        <div class="hcard predict" role="button" tabindex="0" onclick="startPredict()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startPredict()}">
+          <div><h3>预测一批新数据</h3><p>选择当前模型或导入模型文件，为新数据批量生成分类标签。</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 训练 · 第1步：拖入训练集 ===== -->
+    <div class="screen" id="scr-t1">
+      <div class="page-head">
+        <div>
+          <div class="stepline">训练流程 · 第 1 步 / 共 3 步</div>
+          <h2>上传训练数据</h2>
+          <p>选择包含输入特征与目标结果的 Excel 文件</p>
+        </div>
+        <div class="progress" aria-label="当前进度 1/3"><span class="on"></span><span></span><span></span></div>
+      </div>
+      <div class="panel stage-panel">
+        <div class="ph"><span class="b"></span>训练数据集 <span class="tag">新建模型</span></div>
+        <div class="drop" id="dropTrain" role="button" tabindex="0" aria-label="选择训练用 Excel 文件">
+          <div class="big">拖入训练用 Excel，或点击选择文件</div>
+          <div class="sub">文件需包含二值目标列 Y，支持 0/1、是/否、Y/N</div>
+        </div>
+        <input type="file" id="fileTrain" accept=".xlsx,.xls" style="display:none">
+        <div class="fileinfo" id="fiTrain"><div id="ftTrain"></div></div>
+        <div class="btns">
+          <button class="btn ghost" onclick="goHome()">返回</button>
+          <button class="btn primary" id="t1Next" onclick="showScreen('scr-t2')" disabled>配置训练参数</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 训练 · 第2步：训练选项 ===== -->
+    <div class="screen" id="scr-t2">
+      <div class="page-head">
+        <div>
+          <div class="stepline">训练流程 · 第 2 步 / 共 3 步</div>
+          <h2>配置模型</h2>
+          <p>确认特征、目标字段与数据处理方式</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <button class="btn ghost" id="previewBtn" onclick="openPreview()">预览导入文件</button>
+          <div class="progress" aria-label="当前进度 2/3"><span class="on"></span><span class="on"></span><span></span></div>
+        </div>
+      </div>
+      <div class="panel stage-panel">
+        <div class="settings-shell">
+          <aside class="settings-aside">
+            <div class="ph"><span class="b"></span>预处理参数</div>
+            <div class="row"><label for="impute">缺失值处理（全局默认）</label>
+              <select id="impute" style="width:100%"><option value="mean">均值填充</option><option value="median">中位数填充</option><option value="zero">0 填充</option></select>
             </div>
-            <div class="row"><label>阈值</label>
+            <div class="row"><label>数据标准化</label>
+              <div class="tg" id="scalerTg" role="switch" aria-checked="false" tabindex="0" onclick="toggleScaler()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleScaler()}"></div>
+              <span class="sub">业务打分建议关闭</span>
+            </div>
+            <div class="row"><label for="thrTrain">分类阈值</label></div>
+            <div class="row">
               <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrTrain" style="flex:1"
                 oninput="thTrainVal.textContent=(+this.value).toFixed(2)">
-              <span class="thbadge" id="thTrainVal">0.50</span></div>
-          </div>
-        </div>
-        <div style="margin-top:12px" id="trainFields">
-          <div class="cols">
-            <div class="box"><div class="bt">可选字段</div><div class="chips" id="poolChips"><span class="sub">上传训练文件后自动填充…</span></div></div>
-            <div class="arrow">▶</div>
-            <div class="box"><div class="bt">训练输入字段 (X)</div><div class="chips" id="inputChips"></div></div>
-            <div class="box"><div class="bt">目标字段 (Y)</div><select id="outputSel" style="width:100%"><option>—</option></select>
-              <div class="sub" style="margin-top:8px">点“可选/输入”里的字段可移动</div></div>
+              <span class="thbadge" id="thTrainVal">0.50</span>
+            </div>
+            <div class="sub">概率达到阈值时，结果判定为正类 1。</div>
+          </aside>
+          <div class="settings-main">
+            <div class="ph"><span class="b"></span>字段配置</div>
+            <div class="cols">
+              <div class="box"><div class="bt">可选字段</div><div class="chips" id="poolChips"><span class="sub">上传训练文件后自动填充…</span></div></div>
+              <div class="box"><div class="bt">训练输入字段 X</div><div class="chips" id="inputChips"></div></div>
+              <div class="box"><div class="bt">目标字段 Y</div><select id="outputSel" style="width:100%"><option>—</option></select>
+                <div class="sub" style="margin-top:8px">点击字段标签可在列表间移动</div></div>
+            </div>
+            <details class="box" id="catBox" style="margin-top:12px">
+              <summary class="bt" style="cursor:pointer">类别字段<span class="help" data-tip="城市、零件类型等文本字段可勾选纳入模型" onclick="showTip(event,this)">?</span></summary>
+              <div class="chips" id="catChips" style="margin-top:8px"><span class="sub">上传训练文件后自动推荐…</span></div>
+            </details>
+            <details class="box" id="imputeBox" style="margin-top:12px">
+              <summary class="bt" style="cursor:pointer">缺失值 · 按特征设置<span class="help" data-tip="默认「跟随全局（左侧）」，可对单个特征单独指定填充方式" onclick="showTip(event,this)">?</span></summary>
+              <div id="imputeRows" style="margin-top:8px"><span class="sub">选择训练输入字段 X 后，在此逐个自定义…</span></div>
+            </details>
+            <div class="box" style="margin-top:12px">
+              <div class="bt">AI 生成新特征<span class="help" data-tip="用一句话描述逻辑，如「全球成本除以本地成本」「每个城市的平均成本」「城市和类型拼成新类别」" onclick="showTip(event,this)">?</span></div>
+              <details id="aiSettings" style="margin:8px 0">
+                <summary style="cursor:pointer;color:var(--accent)">AI 设置（填入你自己的 API Key）</summary>
+                <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin-top:8px">
+                  <label for="aiKey">API Key</label>
+                  <input type="password" id="aiKey" placeholder="sk-... 只保存在你本机浏览器" autocomplete="off">
+                  <label for="aiBase">接口地址</label>
+                  <input id="aiBase" value="https://api.deepseek.com" placeholder="https://api.deepseek.com">
+                  <label for="aiModel">模型</label>
+                  <input id="aiModel" value="deepseek-v4-flash" placeholder="deepseek-v4-flash">
+                </div>
+                <div class="sub" style="margin-top:6px">默认用 DeepSeek（接口 https://api.deepseek.com、模型 deepseek-v4-flash），填入你自己的 API Key 即可。也可改成别家（如 OpenAI：https://api.openai.com/v1 + gpt-4o-mini）。Key 仅存在你本机浏览器、生成时临时发给本服务调用，不会存到服务器。</div>
+              </details>
+              <div style="display:flex;gap:8px;margin:8px 0">
+                <input id="featDesc" placeholder="描述新特征的计算逻辑…" style="flex:1"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();genFeature()}">
+                <button class="btn ghost" id="genFeatBtn" onclick="genFeature()">生成</button>
+              </div>
+              <div id="featPreview" class="sub"></div>
+              <div id="derivedList" class="sub" style="margin-top:6px"></div>
+            </div>
           </div>
         </div>
         <div class="btns">
-          <button class="btn primary" id="trainBtn" onclick="doTrain()" disabled>▶ 开始训练并保存模型</button>
-          <button class="btn ghost" id="expTrainBtn" disabled onclick="dl(trainDL)">⬇ 导出训练打分</button>
+          <button class="btn ghost" onclick="showScreen('scr-t1')">上一步</button>
+          <button class="btn primary" id="trainBtn" onclick="doTrain()">开始训练并保存模型</button>
         </div>
-        <div class="banner" id="trainResult" style="display:none"></div>
       </div>
+    </div>
 
-      <!-- ===== 第二步：预测 ===== -->
-      <div class="panel lock" id="predPanel">
-        <div class="ph"><span class="b"></span>第二步 · 预测文件 <span class="tag g">套用模型出结果</span>
-          <span class="sub" id="predLock" style="font-weight:400">（完成训练后解锁）</span></div>
+    <!-- ===== 预测 · 第1步：选择模型 ===== -->
+    <div class="screen" id="scr-p1">
+      <div class="page-head">
+        <div>
+          <div class="stepline">预测流程 · 第 1 步 / 共 3 步</div>
+          <h2>选择预测模型</h2>
+          <p>使用当前模型，或导入之前保存的模型文件</p>
+        </div>
+        <div class="progress" aria-label="当前进度 1/3"><span class="on"></span><span></span><span></span></div>
+      </div>
+      <div class="panel stage-panel">
+        <div class="ph"><span class="b"></span>可用模型 <span class="tag g">批量预测</span></div>
+
+        <label class="optcard" id="optCurrent" style="display:none">
+          <input type="radio" name="modelChoice" value="current" onclick="pickModel('current')">
+          <div>
+            <div class="ot">使用当前已训练的模型 <span id="curModelName" style="color:var(--accent)"></span></div>
+            <div class="sub" id="curModelMeta"></div>
+          </div>
+        </label>
+
+        <label class="optcard" id="optImport">
+          <input type="radio" name="modelChoice" value="import" onclick="pickModel('import')">
+          <div>
+            <div class="ot">导入已保存的模型文件</div>
+            <div class="sub">支持之前通过“导出模型”生成的 .pkl 文件</div>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+              <label class="btn ghost" style="cursor:pointer">选择 .pkl 文件
+                <input type="file" id="impModelFile" accept=".pkl,.model" style="display:none"></label>
+              <span class="sub" id="impFileName"></span>
+            </div>
+          </div>
+        </label>
+
+        <div class="btns">
+          <button class="btn ghost" onclick="goHome()">返回</button>
+          <button class="btn primary" id="p1Next" onclick="showScreen('scr-p2')" disabled>上传预测数据</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 预测 · 第2步：拖入预测集 ===== -->
+    <div class="screen" id="scr-p2">
+      <div class="page-head">
+        <div>
+          <div class="stepline">预测流程 · 第 2 步 / 共 3 步</div>
+          <h2>上传并匹配数据</h2>
+          <p>系统会自动匹配同名字段，也可手动调整</p>
+        </div>
+        <div class="progress" aria-label="当前进度 2/3"><span class="on"></span><span class="on"></span><span></span></div>
+      </div>
+      <div class="panel stage-panel">
         <div class="grid2">
           <div>
-            <div class="drop" id="dropPred"><div style="font-size:22px">⬆️</div>
-              <div class="big">点击或拖入【待预测】Excel</div>
+            <div class="ph"><span class="b"></span>待预测数据</div>
+            <div class="drop" id="dropPred" role="button" tabindex="0" aria-label="选择待预测 Excel 文件">
+              <div class="big">拖入待预测 Excel，或点击选择文件</div>
               <div class="sub">无需 Y 列，只要含模型用到的字段</div></div>
             <input type="file" id="filePred" accept=".xlsx,.xls" style="display:none">
-            <div class="fileinfo" id="fiPred"><div class="x">XLS</div><div id="ftPred"></div></div>
-            <div class="row" style="margin-top:12px"><label>阈值</label>
+            <div class="fileinfo" id="fiPred"><div id="ftPred"></div></div>
+            <div class="row" style="margin-top:16px"><label for="thrPred">分类阈值</label>
               <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrPred" style="flex:1"
                 oninput="thPredVal.textContent=(+this.value).toFixed(2)">
               <span class="thbadge" id="thPredVal">0.50</span></div>
-            <div class="row"><label>对比列</label>
+            <div class="row"><label for="compareCol">实际结果列</label>
               <select id="compareCol" style="flex:1"><option value="">（不对比）</option></select></div>
-            <div class="sub" style="margin:2px 0 0 102px">可选预测文件里的实际结果列（如 Local Buy决策），比对后给出准确率</div>
-            <div class="btns">
-              <button class="btn green" id="predBtn" onclick="doPredict()" disabled>▶ 生成预测结果</button>
-              <button class="btn ghost" id="expPredBtn" disabled onclick="dl(predDL)">⬇ 导出预测结果 Excel</button>
-            </div>
+            <div class="sub">可选已有实际结果的列，预测后将同时计算准确率。</div>
           </div>
           <div>
-            <div class="ph" style="font-size:13px"><span class="b"></span>字段映射（模型字段 → 预测文件的列）</div>
+            <div class="ph"><span class="b"></span>字段映射</div>
             <div id="mapArea"><span class="sub">上传预测文件后，自动匹配同名列；名字不同的可在这里手动选择。</span></div>
           </div>
         </div>
+        <div class="btns">
+          <button class="btn ghost" onclick="showScreen('scr-p1')">上一步</button>
+          <button class="btn green" id="predBtn" onclick="doPredict()" disabled>生成预测结果</button>
+        </div>
       </div>
+    </div>
 
-      <!-- ===== 结果 ===== -->
-      <div class="grid3" id="resultArea" style="display:none">
+    <!-- ===== 结果（训练/预测共用） ===== -->
+    <div class="screen" id="scr-result">
+      <div class="page-head">
+        <div>
+          <div class="stepline" id="resultStep">结果</div>
+          <h2>分析结果</h2>
+          <p>查看模型状态、分类分布与明细预览</p>
+        </div>
+        <div class="progress" aria-label="当前进度 3/3"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+      </div>
+      <div class="banner" id="trainResult" style="display:none"></div>
+      <div class="grid3" id="resultArea">
         <div class="panel"><div class="ph"><span class="b"></span>状态</div><div id="statusBox"></div></div>
         <div class="panel"><div class="ph"><span class="b"></span>结果分布</div>
           <div class="donutwrap"><div class="donut" id="donut"><div class="hole"><small>总数</small><b id="dTotal">0</b></div></div>
             <div class="leg" id="donutLeg"></div></div></div>
-        <div class="panel"><div class="ph"><span class="b"></span>预测结果预览 <span class="sub" style="font-weight:400">（前10行）</span></div>
-          <div style="max-height:200px;overflow:auto"><table><thead><tr><th>ID</th><th>预测(1/0)</th><th>概率</th><th>判断</th></tr></thead>
+        <div class="panel"><div class="ph"><span class="b"></span>预测结果预览 <span class="sub" style="font-weight:400">前 10 行</span></div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>预测</th><th>概率</th><th>判断</th></tr></thead>
             <tbody id="previewBody"><tr><td colspan="4" class="sub">运行后显示…</td></tr></tbody></table></div></div>
       </div>
+      <div class="panel" id="impPanel" style="display:none;margin-top:14px">
+        <div class="ph"><span class="b"></span>特征重要性
+          <span class="sub" style="font-weight:400">系数为正推向正类 1，为负推向负类 0</span></div>
+        <div id="impBody"></div>
+      </div>
+      <div class="btns">
+        <button class="btn ghost" id="expTrainBtn" onclick="dl(trainDL)">导出训练打分</button>
+        <button class="btn ghost" id="expModelBtn" onclick="exportModel()">导出模型</button>
+        <button class="btn ghost" id="expPredBtn" onclick="dl(predDL)">导出预测结果</button>
+        <button class="btn primary" id="goPredictBtn" onclick="goPredict()">继续预测新数据</button>
+        <button class="btn ghost" onclick="goHome()">返回首页</button>
+      </div>
     </div>
+
   </div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="modal-mask" id="previewMask" onclick="if(event.target===this)closePreview()">
+  <div class="modal-win">
+    <div class="modal-head">
+      <div><b>导入文件预览</b> <span class="sub" id="previewMeta"></span></div>
+      <button class="btn ghost" onclick="closePreview()">关闭</button>
+    </div>
+    <div class="modal-body" id="filePreviewBody"><div class="sub" style="padding:20px">加载中…</div></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const S={columns:[],input:[],output:'',mapFeatures:[],mapCols:[]};
-let trainDL=null, predDL=null;
+const S={columns:[],input:[],output:'',mapFeatures:[],mapCols:[],catCandidates:[],cat:[],imputeMap:{},derived:[]};
+let trainDL=null, predDL=null, MODEL=null;
 function toast(m,ms=2800){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms);}
-function setStep(n){document.querySelectorAll('.step').forEach(s=>{const k=+s.dataset.s;s.classList.toggle('on',k===n);s.classList.toggle('done',k<n);});}
 function dl(id){if(id)location.href='/api/download/'+id;}
+function toggleScaler(){
+  const t=document.getElementById('scalerTg');
+  const next=!t.classList.contains('on');
+  t.classList.toggle('on',next);
+  t.setAttribute('aria-checked',String(next));
+}
+
+/* ---- 屏幕路由 ---- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+  document.getElementById('homeBtn').style.display = (id==='scr-home')?'none':'inline-flex';
+  window.scrollTo(0,0);
+}
+function goHome(){showScreen('scr-home');}
+function startTrain(){showScreen('scr-t1');}
+function startPredict(){enterP1();}
+function goPredict(){enterP1();}
+function enterP1(){
+  const has=!!MODEL;
+  document.getElementById('optCurrent').style.display=has?'flex':'none';
+  if(has){document.getElementById('curModelName').textContent=MODEL.version;
+    document.getElementById('curModelMeta').textContent=`目标 Y=${MODEL.y_name}，需要特征 ${MODEL.features.length} 个`;}
+  document.querySelectorAll('input[name=modelChoice]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.optcard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('impFileName').textContent='';
+  document.getElementById('p1Next').disabled=true;
+  showScreen('scr-p1');
+}
+function pickModel(kind){
+  document.getElementById('optCurrent').classList.toggle('sel',kind==='current');
+  document.getElementById('optImport').classList.toggle('sel',kind==='import');
+  if(kind==='current')document.getElementById('p1Next').disabled=!MODEL;
+  else document.getElementById('p1Next').disabled=!document.getElementById('impFileName').textContent;
+}
+function gotoResult(kind){
+  const isTrain = kind==='train';
+  document.getElementById('trainResult').style.display = isTrain?'block':'none';
+  document.getElementById('expTrainBtn').style.display = isTrain?'inline-flex':'none';
+  document.getElementById('expModelBtn').style.display = isTrain?'inline-flex':'none';
+  document.getElementById('goPredictBtn').style.display = isTrain?'inline-flex':'none';
+  document.getElementById('expPredBtn').style.display = isTrain?'none':'inline-flex';
+  document.getElementById('resultStep').textContent = isTrain?'训练 · 第 3 步 / 共 3 步':'预测 · 第 3 步 / 共 3 步';
+  showScreen('scr-result');
+}
 
 /* ---- 上传训练文件 ---- */
 const dt=document.getElementById('dropTrain'), ftIn=document.getElementById('fileTrain');
 dt.onclick=()=>ftIn.click();
-dt.ondragover=e=>{e.preventDefault();dt.style.background='#eef4ff';};
-dt.ondragleave=()=>dt.style.background='';
-dt.ondrop=e=>{e.preventDefault();dt.style.background='';if(e.dataTransfer.files[0])upTrain(e.dataTransfer.files[0]);};
+dt.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ftIn.click();}};
+dt.ondragover=e=>{e.preventDefault();dt.classList.add('dragging');};
+dt.ondragleave=()=>dt.classList.remove('dragging');
+dt.ondrop=e=>{e.preventDefault();dt.classList.remove('dragging');if(e.dataTransfer.files[0])upTrain(e.dataTransfer.files[0]);};
 ftIn.onchange=e=>{if(e.target.files[0])upTrain(e.target.files[0]);};
 async function upTrain(f){
   const fd=new FormData();fd.append('file',f);toast('上传训练文件并自动识别字段…');
@@ -214,8 +662,10 @@ async function upTrain(f){
   const fi=document.getElementById('fiTrain');fi.style.display='flex';
   document.getElementById('ftTrain').innerHTML=`<b>${j.filename}</b> ｜ ${(j.size/1048576).toFixed(1)}MB ｜ ${j.n_rows} 行`;
   S.columns=j.columns;S.input=(j.input_fields||[]).slice();S.output=j.output_field||'';
-  renderFields();document.getElementById('trainBtn').disabled=false;setStep(1);
-  toast(j.output_field?`已识别：目标 Y=${j.output_field}，输入 X ${(j.input_fields||[]).length} 个`:'未识别到目标列 Y，请在下方手动选择');
+  S.catCandidates=(j.cat_fields||[]).slice();S.cat=[];
+  S.derived=[];S.imputeMap={};
+  renderFields();renderCats();renderDerived();document.getElementById('t1Next').disabled=false;
+  toast(j.output_field?`已识别：目标 Y=${j.output_field}，输入 X ${(j.input_fields||[]).length} 个，点“下一步”`:'未识别到目标列 Y，请在下一步手动选择');
 }
 function renderFields(){
   const pool=S.columns.filter(c=>!S.input.includes(c)&&c!==S.output);
@@ -227,38 +677,201 @@ function renderFields(){
   const sel=document.getElementById('outputSel');sel.innerHTML='';
   S.columns.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;if(c===S.output)o.selected=true;sel.appendChild(o);});
   sel.onchange=()=>{S.output=sel.value;S.input=S.input.filter(x=>x!==S.output);renderFields();};
+  renderImpute();
+}
+const IMPUTE_OPTS=[['','跟随全局'],['mean','均值'],['median','中位数'],['zero','0'],['custom','自定义值']];
+function renderImpute(){
+  const box=document.getElementById('imputeRows');box.innerHTML='';
+  if(!S.input.length){box.innerHTML='<span class="sub">选择训练输入字段 X 后，在此逐个自定义…</span>';return;}
+  // 清掉已不在输入里的旧配置
+  Object.keys(S.imputeMap).forEach(k=>{if(!S.input.includes(k))delete S.imputeMap[k];});
+  S.input.forEach(c=>{
+    const cur=S.imputeMap[c]||{method:'',value:''};
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;margin:6px 0';
+    const name=document.createElement('span');
+    name.textContent=c;name.title=c;
+    name.style.cssText='flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    const sel=document.createElement('select');sel.style.cssText='width:120px;flex:none';
+    IMPUTE_OPTS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(v===(cur.method||''))o.selected=true;sel.appendChild(o);});
+    const num=document.createElement('input');
+    num.type='number';num.step='any';num.placeholder='填充值';num.value=cur.value??'';
+    num.style.cssText='width:110px;flex:none';
+    num.style.display=(cur.method==='custom')?'':'none';
+    sel.onchange=()=>{
+      const m=sel.value;
+      if(!m){delete S.imputeMap[c];num.style.display='none';num.value='';return;}
+      S.imputeMap[c]={method:m,value:(m==='custom'?num.value:'')};
+      num.style.display=(m==='custom')?'':'none';
+    };
+    num.oninput=()=>{if(S.imputeMap[c])S.imputeMap[c].value=num.value;};
+    row.appendChild(name);row.appendChild(sel);row.appendChild(num);
+    box.appendChild(row);
+  });
 }
 function chip(t,fn,rm){const e=document.createElement('span');e.className='chip';e.innerHTML=t+(rm?' <span class="x">×</span>':'');e.onclick=fn;return e;}
+function renderCats(){
+  const cb=document.getElementById('catBox');if(cb)cb.open=S.catCandidates.length>0;  // 没识别到就折叠
+  const cc=document.getElementById('catChips');cc.innerHTML='';
+  if(!S.catCandidates.length){cc.innerHTML='<span class="sub">（未检测到合适的类别字段）</span>';return;}
+  S.catCandidates.forEach(c=>{
+    const on=S.cat.includes(c);
+    const e=document.createElement('span');e.className='chip'+(on?' on':'');
+    e.textContent=c;
+    e.onclick=()=>{S.cat=on?S.cat.filter(x=>x!==c):S.cat.concat([c]);renderCats();};
+    cc.appendChild(e);
+  });
+}
+
+/* ---- 问号帮助气泡 ---- */
+function showTip(ev,el){
+  ev.stopPropagation();ev.preventDefault();          // 避免触发 details 展开/收起
+  // 再点同一个问号 → 收起
+  const open=document.querySelector('.tipbubble');
+  const same=open&&open._owner===el;
+  document.querySelectorAll('.tipbubble').forEach(x=>x.remove());
+  if(same)return;
+  const b=document.createElement('div');b.className='tipbubble';b._owner=el;
+  b.textContent=el.getAttribute('data-tip')||'';
+  document.body.appendChild(b);
+  const r=el.getBoundingClientRect();
+  let left=window.scrollX+r.left;
+  left=Math.min(left,window.scrollX+document.documentElement.clientWidth-b.offsetWidth-12);
+  b.style.left=Math.max(8,left)+'px';
+  b.style.top=(window.scrollY+r.bottom+6)+'px';
+  requestAnimationFrame(()=>b.classList.add('show'));
+  setTimeout(()=>{b.classList.remove('show');setTimeout(()=>b.remove(),500);},5000);
+}
+
+/* ---- AI 设置（用户自己的 key，存本机浏览器）---- */
+function loadAiSettings(){
+  try{
+    const k=localStorage.getItem('ai_key')||'';
+    const base=localStorage.getItem('ai_base')||'https://api.deepseek.com';
+    const model=localStorage.getItem('ai_model')||'deepseek-v4-flash';
+    const ke=document.getElementById('aiKey'),be=document.getElementById('aiBase'),me=document.getElementById('aiModel');
+    if(ke)ke.value=k;if(be)be.value=base;if(me)me.value=model;
+    // 已填过 key 就默认折叠设置区
+    const det=document.getElementById('aiSettings');if(det&&!k)det.open=true;
+  }catch(e){}
+}
+function saveAiSettings(){
+  try{
+    localStorage.setItem('ai_key',(document.getElementById('aiKey').value||'').trim());
+    localStorage.setItem('ai_base',(document.getElementById('aiBase').value||'').trim());
+    localStorage.setItem('ai_model',(document.getElementById('aiModel').value||'').trim());
+  }catch(e){}
+}
+document.addEventListener('DOMContentLoaded',loadAiSettings);
+
+/* ---- AI 生成新特征 ---- */
+async function genFeature(){
+  const inp=document.getElementById('featDesc');
+  const desc=(inp.value||'').trim();
+  if(!desc){toast('请先描述特征逻辑');return;}
+  if(!S.columns.length){toast('请先上传训练文件');return;}
+  saveAiSettings();
+  const api_key=(document.getElementById('aiKey').value||'').trim();
+  const base_url=(document.getElementById('aiBase').value||'').trim();
+  const model=(document.getElementById('aiModel').value||'').trim();
+  if(!api_key){toast('请先在「AI 设置」里填入你的 API Key');document.getElementById('aiSettings').open=true;return;}
+  const b=document.getElementById('genFeatBtn'),o=b.innerHTML;b.disabled=true;b.innerHTML='生成中…';
+  try{
+    const j=await(await fetch('/api/gen_feature',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({description:desc,api_key,base_url,model})})).json();
+    if(!j.ok){
+      if(j.friendly)showFeatError(j.friendly,tail(j.msg));
+      else showFeatError('生成失败：'+tail(j.msg));
+      return;
+    }
+    window._lastFeat=j;
+    const kindTxt=j.is_cat?'类别列':'数值列';
+    document.getElementById('featPreview').innerHTML=
+      `<b>${j.name}</b>（${kindTxt}）：${j.explanation||''}<br>`
+      +`预览：${j.preview.map(v=>v===null?'—':v).join(', ')}`
+      +(j.is_cat?'':`（缺失 ${j.n_nan} 个）`)
+      +` <button class="btn ghost" style="padding:2px 10px" onclick="adoptFeature()">采用</button>`;
+  }catch(e){showFeatError('出错：'+e);}finally{b.disabled=false;b.innerHTML=o;}
+}
+function showFeatError(msg,detail){
+  const esc=s=>String(s).replace(/</g,'&lt;');
+  const box=document.getElementById('featPreview');
+  box.innerHTML=`<span style="color:#c0392b">⚠ ${esc(msg)}</span>`
+    +(detail?`<details style="margin-top:4px"><summary class="sub" style="cursor:pointer">技术细节</summary>`
+      +`<span class="sub">${esc(detail)}</span></details>`:'');
+}
+function adoptFeature(){
+  const j=window._lastFeat;if(!j)return;
+  if(S.columns.includes(j.name)){toast('已存在同名列 '+j.name);return;}
+  S.derived.push(j.spec);
+  S.columns.push(j.name);
+  if(j.is_cat){S.catCandidates.push(j.name);if(!S.cat.includes(j.name))S.cat.push(j.name);renderCats();}
+  else{S.input.push(j.name);renderFields();}
+  document.getElementById('featPreview').innerHTML='';
+  document.getElementById('featDesc').value='';
+  renderDerived();
+  toast(`已采用新特征 ${j.name}${j.is_cat?'（类别列）':''}`);
+}
+function renderDerived(){
+  const box=document.getElementById('derivedList');if(!box)return;
+  if(!S.derived.length){box.innerHTML='';return;}
+  box.innerHTML='已添加派生特征：';
+  S.derived.forEach((d,i)=>{
+    const e=document.createElement('span');e.className='chip on';
+    e.innerHTML=d.name+' <span class="x">×</span>';
+    e.onclick=()=>{
+      S.derived.splice(i,1);
+      S.columns=S.columns.filter(x=>x!==d.name);
+      S.input=S.input.filter(x=>x!==d.name);
+      S.cat=S.cat.filter(x=>x!==d.name);
+      S.catCandidates=S.catCandidates.filter(x=>x!==d.name);
+      renderFields();renderCats();renderDerived();
+    };
+    box.appendChild(e);
+  });
+}
 
 /* ---- 训练 ---- */
 async function doTrain(){
   if(!S.input.length||!S.output){toast('请确认输入字段(X)和目标字段(Y)');return;}
+  // 组装按特征的缺失值配置；自定义但没填数值的先拦下
+  const imputeMap={};
+  for(const c of S.input){
+    const m=S.imputeMap[c];if(!m||!m.method)continue;
+    if(m.method==='custom'){
+      if(m.value===''||m.value===null||m.value===undefined||isNaN(+m.value)){
+        toast(`特征「${c}」选择了自定义填充，请填写一个数值`);return;}
+      imputeMap[c]={method:'custom',value:+m.value};
+    }else{imputeMap[c]={method:m.method};}
+  }
   const b=document.getElementById('trainBtn'),o=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span> 训练中…';
   const cfg={threshold:+document.getElementById('thrTrain').value,impute:document.getElementById('impute').value,
-    scaler:document.getElementById('scalerTg').classList.contains('on'),target:S.output,features:S.input};
+    impute_map:imputeMap,derived:S.derived,
+    scaler:document.getElementById('scalerTg').classList.contains('on'),target:S.output,features:S.input,categorical:S.cat};
   try{
     const j=await(await fetch('/api/train',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})).json();
     if(!j.ok){toast('训练失败：'+tail(j.msg));return;}
-    let h=`✔ 训练完成，模型已保存 <b>${j.model_version}</b>。目标 Y=${j.y_name}，输入 X ${j.features.length} 个。`;
+    const nCat=j.categorical?Object.keys(j.categorical).length:0;
+    let h=`训练完成，模型已保存 <b>${j.model_version}</b>。目标 Y=${j.y_name}，输入 X ${j.features.length} 个${nCat?`，类别字段 ${nCat} 个(已 one-hot)`:''}。`;
     if(j.cv)h+=` 交叉验证(${j.cv.k}折)准确率 <b>${j.cv.acc}</b>，F1 ${j.cv.f1}。`;
     if(j.holdout)h+=` 单次切分准确率 ${j.holdout.acc}。`;
-    const tr=document.getElementById('trainResult');tr.style.display='block';tr.innerHTML=h;
-    trainDL=j.predict.download_id;document.getElementById('expTrainBtn').disabled=false;
+    document.getElementById('trainResult').innerHTML=h;
+    trainDL=j.predict.download_id;
+    setModelStat({version:j.model_version,y_name:j.y_name,features:j.features});
     showResult(j,'训练文件自身打分');
-    unlockPred(j.model_version,j.features);setStep(3);toast('训练完成，已解锁第二步');
+    gotoResult('train');
+    toast('训练完成');
   }catch(e){toast('出错：'+e);}finally{b.disabled=false;b.innerHTML=o;}
 }
 
-/* ---- 解锁 + 上传预测文件 ---- */
-function unlockPred(ver,feats){
-  document.getElementById('predPanel').classList.remove('lock');
-  document.getElementById('predLock').textContent=`（当前模型 ${ver}，需字段 ${feats.length} 个）`;
-}
+/* ---- 上传预测文件 ---- */
 const dp=document.getElementById('dropPred'), fpIn=document.getElementById('filePred');
 dp.onclick=()=>fpIn.click();
-dp.ondragover=e=>{e.preventDefault();dp.style.background='#eef4ff';};
-dp.ondragleave=()=>dp.style.background='';
-dp.ondrop=e=>{e.preventDefault();dp.style.background='';if(e.dataTransfer.files[0])upPred(e.dataTransfer.files[0]);};
+dp.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fpIn.click();}};
+dp.ondragover=e=>{e.preventDefault();dp.classList.add('dragging');};
+dp.ondragleave=()=>dp.classList.remove('dragging');
+dp.ondrop=e=>{e.preventDefault();dp.classList.remove('dragging');if(e.dataTransfer.files[0])upPred(e.dataTransfer.files[0]);};
 fpIn.onchange=e=>{if(e.target.files[0])upPred(e.target.files[0]);};
 async function upPred(f){
   const fd=new FormData();fd.append('file',f);toast('上传预测文件并匹配字段…');
@@ -268,23 +881,23 @@ async function upPred(f){
   document.getElementById('ftPred').innerHTML=`<b>${j.filename}</b> ｜ ${j.n_rows} 行 ｜ 数据表: ${j.sheet}`;
   S.mapFeatures=j.features;S.mapCols=j.columns;
   fillCompare(j.columns);
-  renderMap(j.match);document.getElementById('predBtn').disabled=false;setStep(3);
+  renderMap(j.match);document.getElementById('predBtn').disabled=false;
   const miss=j.features.filter(x=>!j.match[x]).length;
-  toast(miss?`有 ${miss} 个字段未自动匹配，请在右侧手动选择`:'字段已全部自动匹配，可直接生成预测结果');
+  const catMiss=(j.cat_missing||[]).length;
+  if(catMiss)toast(`有 ${catMiss} 个类别列在预测文件中缺失，将按"其他"(全0)处理`,5000);
+  else toast(miss?`有 ${miss} 个字段未自动匹配，请在右侧手动选择`:'字段已全部自动匹配，可直接生成预测结果');
 }
 function renderMap(match){
   const area=document.getElementById('mapArea');area.innerHTML='';
   S.mapFeatures.forEach(feat=>{
     const sel=document.createElement('select');sel.style.width='100%';sel.dataset.feat=feat;
-    // 特殊选项：用训练均值 / 不采用(置0)
     const om=document.createElement('option');om.value='__MEAN__';om.textContent='（用训练均值填充）';sel.appendChild(om);
     const oz=document.createElement('option');oz.value='__ZERO__';oz.textContent='（不采用 / 置0）';sel.appendChild(oz);
     S.mapCols.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-    // 默认：匹配到同名列就选它，否则默认用训练均值
     sel.value = match[feat] ? match[feat] : '__MEAN__';
     const wrap=document.createElement('div');wrap.className='map';
     const matched = !!match[feat];
-    wrap.innerHTML=`<div${matched?'':' class="bad"'}>${feat}${matched?'':' ⚠'}</div><div>→</div>`;
+    wrap.innerHTML=`<div${matched?'':' class="bad"'}>${feat}${matched?'':'（未匹配）'}</div><div class="sub">匹配至</div>`;
     const box=document.createElement('div');box.appendChild(sel);wrap.appendChild(box);
     area.appendChild(wrap);
   });
@@ -305,16 +918,17 @@ async function doPredict(){
   try{
     const j=await(await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})).json();
     if(!j.ok){toast('预测失败：'+tail(j.msg));return;}
-    predDL=j.predict.download_id;document.getElementById('expPredBtn').disabled=false;
-    showResult(j,'预测文件');setStep(4);
-    if(j.warn){toast('⚠ '+j.warn,6000);}else{toast('预测完成 ✔ 可导出结果 Excel');}
+    predDL=j.predict.download_id;
+    showResult(j,'预测文件');
+    gotoResult('predict');
+    if(j.warn){toast(j.warn,6000);}else{toast('预测完成，可导出结果 Excel');}
   }catch(e){toast('出错：'+e);}finally{b.disabled=false;b.innerHTML=o;}
 }
 
 /* ---- 结果展示 ---- */
 function showResult(j,srcLabel){
   document.getElementById('resultArea').style.display='grid';
-  let h=`<div class="kv"><span>状态</span><span class="status-ok">✔ 成功</span></div>`;
+  let h=`<div class="kv"><span>状态</span><span class="status-ok">成功</span></div>`;
   h+=`<div class="kv"><span>来源</span><b>${j.predict_source||srcLabel}</b></div>`;
   if(j.model_version)h+=`<div class="kv"><span>模型版本</span><b>${j.model_version}</b></div>`;
   h+=`<div class="kv"><span>阈值</span><b>${(+j.threshold).toFixed(2)}</b></div>`;
@@ -333,21 +947,81 @@ function showResult(j,srcLabel){
   }
   document.getElementById('statusBox').innerHTML=h;
   const p=j.predict;
-  document.getElementById('donut').style.background=`conic-gradient(var(--accent) 0 ${p.pos_pct}%,#16a34a ${p.pos_pct}% 100%)`;
+  document.getElementById('donut').style.background=`conic-gradient(var(--accent) 0 ${p.pos_pct}%,var(--cyan) ${p.pos_pct}% 100%)`;
   document.getElementById('dTotal').textContent=p.n;
   document.getElementById('donutLeg').innerHTML=
     `<div><span class="d" style="background:var(--accent)"></span>正类(1) <b>${p.pos}</b>（${p.pos_pct}%）</div>`+
-    `<div><span class="d" style="background:#16a34a"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
+    `<div><span class="d" style="background:var(--cyan)"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
   const tb=document.getElementById('previewBody');tb.innerHTML='';
   p.preview.forEach(r=>{tb.innerHTML+=`<tr><td>${r.id}</td><td><span class="tag2 ${r.label.includes('1')?'pos':'neg'}">${r.label}</span></td><td>${r.proba}</td><td class="sub">${r.judge}</td></tr>`;});
+  renderImportance(j.importance);
+}
+function renderImportance(imp){
+  const panel=document.getElementById('impPanel'),body=document.getElementById('impBody');
+  if(!imp||!imp.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  const maxAbs=Math.max(...imp.map(d=>Math.abs(d.coef)),1e-9);
+  body.innerHTML=imp.map(d=>{
+    const pct=Math.round(Math.abs(d.coef)/maxAbs*100);
+    const pos=d.coef>=0;
+    const color=pos?'var(--accent)':'#d9534f';
+    const dir=pos?'正向':'负向';
+    return `<div style="display:flex;align-items:center;gap:10px;margin:5px 0">
+      <div style="width:130px;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.name}">${d.name}</div>
+      <div style="flex:1;background:#eef2f8;border-radius:4px;height:16px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px"></div></div>
+      <div style="width:110px;font-size:12px;color:${color}">${(d.coef>=0?'+':'')}${d.coef} <span class="sub">${dir}</span></div>
+    </div>`;
+  }).join('');
 }
 function tail(m){return(m||'').trim().split('\n').slice(-1)[0];}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 
-/* 页面加载：若已有模型，直接解锁第二步 */
-window.addEventListener('load',async()=>{
-  try{const j=await(await fetch('/api/model_info')).json();
-    if(j.has_model&&j.model_info){unlockPred(j.model_info.version,j.model_info.features);
-      toast('检测到已保存模型，可直接上传预测文件出结果');}}catch(e){}
+/* ---- 预览导入文件（浮窗）---- */
+async function openPreview(){
+  const mask=document.getElementById('previewMask');mask.classList.add('show');
+  const body=document.getElementById('filePreviewBody');
+  document.getElementById('previewMeta').textContent='';
+  body.innerHTML='<div class="sub" style="padding:20px">加载中…</div>';
+  try{
+    const j=await(await fetch('/api/preview_train')).json();
+    if(!j.ok){body.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">${esc(tail(j.msg))}</div>`;return;}
+    document.getElementById('previewMeta').textContent=`共 ${j.n_rows} 行 × ${j.n_cols} 列，显示前 ${j.shown} 行`;
+    let h='<table><thead><tr>'+j.columns.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody>';
+    h+=j.rows.map(r=>'<tr>'+r.map(v=>`<td>${esc(v)}</td>`).join('')+'</tr>').join('');
+    body.innerHTML=h+'</tbody></table>';
+  }catch(e){body.innerHTML=`<div class="sub" style="padding:20px;color:#c0392b">出错：${esc(e)}</div>`;}
+}
+function closePreview(){document.getElementById('previewMask').classList.remove('show');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePreview();});
+
+/* ---- 模型状态 / 导出 / 导入 ---- */
+function setModelStat(info){
+  MODEL=info;
+  document.getElementById('expModelBtn').disabled=!info;
+  const badge=document.getElementById('modelBadge');
+  const text=document.getElementById('modelBadgeText');
+  badge.classList.toggle('ready',!!info);
+  text.textContent=info?`模型 ${info.version} 已就绪`:'暂无可用模型';
+}
+function exportModel(){location.href='/api/export_model';}
+document.getElementById('impModelFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const fd=new FormData();fd.append('file',f);toast('导入模型中…');
+  try{
+    const j=await(await fetch('/api/import_model',{method:'POST',body:fd})).json();
+    if(!j.ok){toast('导入失败：'+tail(j.msg));return;}
+    setModelStat(j.model_info);
+    document.getElementById('impFileName').textContent=`${f.name} 已导入 ${j.model_info.version}`;
+    const r=document.querySelector('input[name=modelChoice][value=import]');if(r){r.checked=true;pickModel('import');}
+    toast(`模型已导入 ${j.model_info.version}，点“下一步”`);
+  }catch(err){toast('出错：'+err);}finally{e.target.value='';}
+};
+
+/* 页面加载：默认不载入磁盘中的历史模型，只有本次训练或手动导入后才显示模型 */
+window.addEventListener('load',()=>{
+  setModelStat(null);
+  showScreen('scr-home');
 });
 </script>
 </body>
