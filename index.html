@@ -422,12 +422,70 @@
   /* 表头/浮窗玻璃化 */
   th{background:rgba(255,255,255,.5)!important;backdrop-filter:blur(8px) saturate(1.4)}
   .modal-body th{background:rgba(255,255,255,.62)!important}
+  /* 甜甜圈取背景左上/右上色，预览标签同步匹配 */
+  :root{--donut1:#ff6b35;--donut2:#1a659e}
+  .tag2.pos{background:rgba(87,107,255,.16)!important;color:#333fae!important}
+  .tag2.neg{background:rgba(120,190,235,.30)!important;color:#245b7d!important}
+  /* 去绿色：绿/青全部改到主色系蓝紫 */
+  :root{--cyan:#5aa0ff;--green:#4748c9;--green-soft:#eef0ff}
+  .btn.green{background:linear-gradient(160deg,rgba(91,92,226,.88),rgba(115,116,234,.72))!important;
+    border:1px solid rgba(255,255,255,.4)!important}
+  .banner{color:#26304a!important}
+  .banner.warn{color:#8a5a00!important}
+  .fileinfo{color:#2f3b4b!important}
+  .status-ok{color:var(--accent-strong)!important}
+  .tag2.neg{background:rgba(91,92,226,.12)!important;color:var(--accent-strong)!important}
+  .model-badge.ready{color:var(--accent-strong)!important}
+  .ph .tag.g{color:var(--accent)!important;background:var(--accent-soft)!important}
   /* 文字加深，避免与浅色背景混在一起（改用近黑色，提高可读性） */
   :root{--ink:#0d1524;--sub:#2f3b4b;--muted:#45505f}
   body,.hcard p,.page-head p,.section-heading p,.sub,.kv,.leg,td,.map,.box .bt,.row label,
   .brandcopy h1,.donut .hole small,.modal-head{color:var(--ink)}
   .sub,.hint,.brandcopy span{color:var(--sub)!important}
   th{color:#2f3b4b!important}
+
+  /* ====== 配色：Sunset（橙主色 + 藏青强调 + 橙/蓝图表）====== */
+  :root{
+    --accent:#ff6b35;--accent-strong:#004e89;--accent-soft:#ffe6d6;
+    --donut1:#ff6b35;--donut2:#1a659e;
+    --ink:#141820;--sub:#324150;--muted:#4e5c6b;
+  }
+  .btn.primary,.btn.green{
+    background:var(--glass)!important;
+    backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
+    border:1px solid var(--glass-border)!important;color:#2f3b4b!important;
+    box-shadow:var(--glass-shadow)!important}
+  .btn.primary:hover,.btn.green:hover{background:var(--glass-strong)!important}
+  /* 阈值滑条：白底 + 橙色填充 + 橙色滑块 */
+  input[type=range]{-webkit-appearance:none;appearance:none;height:8px!important;min-height:0!important;
+    padding:0!important;border-radius:999px!important;border:1px solid var(--glass-border)!important;
+    background:#fff;outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:transparent}
+  input[type=range]::-moz-range-track{height:8px;border-radius:999px;background:transparent}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;
+    border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);
+    border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+  .chip{color:#004e89!important}
+  .chip.on{background:linear-gradient(160deg,rgba(255,107,53,.92),rgba(255,107,53,.68))!important;color:#fff!important}
+  .chip .x{color:#ffb492}
+  .tg.on{background:linear-gradient(160deg,rgba(255,107,53,.94),rgba(255,107,53,.74))!important}
+  .stepline{color:#004e89!important}
+  .tag2.pos{background:rgba(255,107,53,.16)!important;color:#c24e1e!important}
+  .tag2.neg{background:rgba(26,101,158,.16)!important;color:#004e89!important}
+  .ph .b{box-shadow:0 0 10px rgba(255,107,53,.55)}
+  .progress span.on{box-shadow:0 0 8px rgba(255,107,53,.55)}
+  .donut{box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 0 24px rgba(255,107,53,.22)}
+  .drop{border-color:rgba(255,107,53,.55)!important;color:var(--accent-strong)}
+  /* 单选框：去掉原生黑圈，改自定义橙点 */
+  .optcard input[type=radio]{
+    -webkit-appearance:none!important;appearance:none!important;
+    width:17px!important;height:17px!important;min-height:0!important;padding:0!important;
+    border:1.5px solid rgba(120,130,150,.5)!important;border-radius:50%!important;
+    background:rgba(255,255,255,.65)!important;cursor:pointer;flex-shrink:0;box-shadow:none!important}
+  .optcard input[type=radio]:checked{
+    border-color:var(--accent)!important;
+    background:radial-gradient(circle,var(--accent) 0 45%,#fff 52%)!important}
 </style>
 </head>
 <body>
@@ -1058,19 +1116,19 @@ function showResult(j,srcLabel){
     if(cp.error){h+=`<div class="kv"><span>对比列</span><b style="color:#c0392b">${cp.error}</b></div>`;}
     else{
       const pct=(cp.acc*100).toFixed(1);
-      h+=`<div class="kv" style="background:#eef7ee;border-radius:6px;padding:8px;margin-top:4px">`+
-         `<span>对比【${cp.col}】准确率</span><b style="color:#16a34a;font-size:15px">${pct}%</b></div>`;
+      h+=`<div class="kv" style="background:#ffe6d6;border-radius:6px;padding:8px;margin-top:4px">`+
+         `<span>对比【${cp.col}】准确率</span><b style="color:#004e89;font-size:15px">${pct}%</b></div>`;
       h+=`<div class="kv"><span>一致 / 有效行</span><b>${cp.agree} / ${cp.n}</b></div>`;
       h+=`<div class="kv"><span>混淆(TP/TN/FP/FN)</span><b>${cp.tp}/${cp.tn}/${cp.fp}/${cp.fn}</b></div>`;
     }
   }
   document.getElementById('statusBox').innerHTML=h;
   const p=j.predict;
-  document.getElementById('donut').style.background=`conic-gradient(var(--accent) 0 ${p.pos_pct}%,var(--cyan) ${p.pos_pct}% 100%)`;
+  document.getElementById('donut').style.background=`conic-gradient(var(--donut1) 0 ${p.pos_pct}%,var(--donut2) ${p.pos_pct}% 100%)`;
   document.getElementById('dTotal').textContent=p.n;
   document.getElementById('donutLeg').innerHTML=
-    `<div><span class="d" style="background:var(--accent)"></span>正类(1) <b>${p.pos}</b>（${p.pos_pct}%）</div>`+
-    `<div><span class="d" style="background:var(--cyan)"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
+    `<div><span class="d" style="background:var(--donut1)"></span>正类(1) <b>${p.pos}</b>（${p.pos_pct}%）</div>`+
+    `<div><span class="d" style="background:var(--donut2)"></span>负类(0) <b>${p.neg}</b>（${p.neg_pct}%）</div>`;
   const hasActual = p.preview.length && p.preview[0].actual!==undefined;
   const head=document.getElementById('previewHead');
   if(head)head.innerHTML='<th>ID</th><th>预测</th><th>概率</th><th>判断</th>'+(hasActual?'<th>实际</th><th>对比</th>':'');
@@ -1083,7 +1141,7 @@ function showResult(j,srcLabel){
       const av=r.actual||'—';
       const avCls=String(av).includes('1')?'pos':(String(av).includes('0')?'neg':'');
       let mark='<span class="sub">—</span>';
-      if(r.correct===true)mark='<span style="color:#16a34a">✓ 正确</span>';
+      if(r.correct===true)mark='<span style="color:#004e89">✓ 正确</span>';
       else if(r.correct===false)mark='<span style="color:#c0392b">✗ 错误</span>';
       row+=`<td>${avCls?`<span class="tag2 ${avCls}">${av}</span>`:av}</td><td>${mark}</td>`;
     }
@@ -1100,7 +1158,7 @@ function renderImportance(imp){
   body.innerHTML=imp.map(d=>{
     const pct=Math.round(Math.abs(d.coef)/maxAbs*100);
     const pos=d.coef>=0;
-    const color=pos?'var(--accent)':'#d9534f';
+    const color=pos?'var(--accent)':'var(--donut2)';
     const dir=pos?'正向':'负向';
     return `<div style="display:flex;align-items:center;gap:10px;margin:5px 0">
       <div style="width:130px;font-size:12px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.name}">${d.name}</div>
@@ -1165,8 +1223,15 @@ document.getElementById('impModelFile').onchange=async e=>{
 };
 
 /* 页面加载：默认不载入磁盘中的历史模型，只有本次训练或手动导入后才显示模型 */
+function paintRange(el){
+  const min=+el.min||0,max=+el.max||1,v=((+el.value-min)/(max-min))*100;
+  el.style.background=`linear-gradient(90deg,var(--accent) 0 ${v}%,#fff ${v}% 100%)`;
+}
 window.addEventListener('load',()=>{
   setModelStat(null);
+  document.querySelectorAll('input[type=range]').forEach(r=>{
+    paintRange(r);r.addEventListener('input',()=>paintRange(r));
+  });
   showScreen('scr-home');
 });
 </script>
