@@ -8,7 +8,7 @@
 运行：
     pip install flask pandas scikit-learn openpyxl
     python app.py
-浏览器打开 http://127.0.0.1:5000
+浏览器打开 http://127.0.0.1:5001
 """
 
 import os
@@ -730,23 +730,30 @@ def api_predict():
         use = pd.DataFrame(index=df.index)
         fillv = bundle.get('fill_values', {})
         derived_names = {str(d.get('name')) for d in bundle.get('derived', [])}
-        used_mean, used_zero = [], []
+        used_mean, used_zero, used_custom = [], [], []
         for feat in feats:
             # 派生特征：无视映射，直接用公式自动算出的值（缺原始字段时上面已跳过→用训练均值）
             if feat in derived_names:
                 use[feat] = df[feat] if feat in df.columns else fillv.get(feat, 0.0)
                 continue
             val = mapping.get(feat)
-            if val == '__ZERO__':
+            if isinstance(val, str) and val.startswith('__CUSTOM__:'):
+                try:
+                    cv = float(val.split(':', 1)[1])
+                except (ValueError, IndexError):
+                    cv = 0.0
+                use[feat] = cv; used_custom.append(feat)
+            elif val == '__ZERO__':
                 use[feat] = 0.0; used_zero.append(feat)
             elif val and val not in ('__MEAN__',) and val in df.columns and df[val].notna().sum() > 0:
                 use[feat] = df[val]
             else:
                 # __MEAN__ 或 未选/空列 → 用训练均值
                 use[feat] = fillv.get(feat, 0.0); used_mean.append(feat)
-        if feats and len(used_mean) + len(used_zero) == len(feats):
+        if feats and len(used_mean) + len(used_zero) + len(used_custom) == len(feats):
             return jsonify(ok=False, msg="所有模型字段都没有对应到预测文件的实际列，请检查文件或字段映射。")
         parts = []
+        if used_custom: parts.append(f"用自定义值填充：{used_custom}")
         if used_mean: parts.append(f"用训练均值填充：{used_mean}")
         if used_zero: parts.append(f"置0(不采用)：{used_zero}")
         if skipped_derived:
@@ -848,5 +855,5 @@ def api_import_model():
 
 
 if __name__ == '__main__':
-    print("网页版已启动: http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    print("网页版已启动: http://127.0.0.1:5001")
+    app.run(host='127.0.0.1', port=5001, debug=False)

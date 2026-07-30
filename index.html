@@ -518,10 +518,10 @@
       </div>
       <div class="homecards">
         <div class="hcard" role="button" tabindex="0" onclick="startTrain()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startTrain()}">
-          <div><h3>训练一个新模型</h3><p>上传带有目标结果的训练集，配置字段后完成训练并保存模型。</p></div>
+          <div><h3>训练一个新模型 <span class="help" data-tip="上传带有目标结果的训练集，配置字段后完成训练并保存模型。" onclick="showTip(event,this)">?</span></h3></div>
         </div>
         <div class="hcard predict" role="button" tabindex="0" onclick="startPredict()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();startPredict()}">
-          <div><h3>预测一批新数据</h3><p>选择当前模型或导入模型文件，为新数据批量生成分类标签。</p></div>
+          <div><h3>预测一批新数据 <span class="help" data-tip="选择当前模型或导入模型文件，为新数据批量生成分类标签。" onclick="showTip(event,this)">?</span></h3></div>
         </div>
       </div>
     </div>
@@ -531,16 +531,14 @@
       <div class="page-head">
         <div>
           <div class="stepline">训练流程 · 第 1 步 / 共 3 步</div>
-          <h2>上传训练数据</h2>
-          <p>选择包含输入特征与目标结果的 Excel 文件</p>
+          <h2>上传训练数据 <span class="help" data-tip="选择包含输入特征与目标结果的 Excel 文件" onclick="showTip(event,this)">?</span></h2>
         </div>
         <div class="progress" aria-label="当前进度 1/3"><span class="on"></span><span></span><span></span></div>
       </div>
       <div class="panel stage-panel">
         <div class="ph"><span class="b"></span>训练数据集 <span class="tag">新建模型</span></div>
         <div class="drop" id="dropTrain" role="button" tabindex="0" aria-label="选择训练用 Excel 文件">
-          <div class="big">拖入训练用 Excel，或点击选择文件</div>
-          <div class="sub">文件需包含二值目标列 Y，支持 0/1、是/否、Y/N</div>
+          <div class="big">拖入训练用 Excel，或点击选择文件 <span class="help" data-tip="文件需包含二值目标列 Y，支持 0/1、是/否、Y/N" onclick="showTip(event,this)">?</span></div>
         </div>
         <input type="file" id="fileTrain" accept=".xlsx,.xls" style="display:none">
         <div class="fileinfo" id="fiTrain"><div id="ftTrain"></div></div>
@@ -556,8 +554,7 @@
       <div class="page-head">
         <div>
           <div class="stepline">训练流程 · 第 2 步 / 共 3 步</div>
-          <h2>配置模型</h2>
-          <p>确认特征、目标字段与数据处理方式</p>
+          <h2>配置模型 <span class="help" data-tip="确认特征、目标字段与数据处理方式" onclick="showTip(event,this)">?</span></h2>
         </div>
         <div style="display:flex;align-items:center;gap:14px">
           <button class="btn ghost" id="previewBtn" onclick="openPreview()">预览导入文件</button>
@@ -571,25 +568,22 @@
             <div class="row"><label for="impute">缺失值处理（全局默认）</label>
               <select id="impute" style="width:100%"><option value="mean">均值填充</option><option value="median">中位数填充</option><option value="zero">0 填充</option></select>
             </div>
-            <div class="row"><label>数据标准化</label>
+            <div class="row"><label>数据标准化 <span class="help" data-tip="业务打分建议关闭" onclick="showTip(event,this)">?</span></label>
               <div class="tg" id="scalerTg" role="switch" aria-checked="false" tabindex="0" onclick="toggleScaler()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleScaler()}"></div>
-              <span class="sub">业务打分建议关闭</span>
             </div>
-            <div class="row"><label for="thrTrain">分类阈值</label></div>
+            <div class="row"><label for="thrTrain">分类阈值 <span class="help" data-tip="概率达到阈值时，结果判定为正类 1。" onclick="showTip(event,this)">?</span></label></div>
             <div class="row">
               <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrTrain" style="flex:1"
                 oninput="thTrainVal.textContent=(+this.value).toFixed(2)">
               <span class="thbadge" id="thTrainVal">0.50</span>
             </div>
-            <div class="sub">概率达到阈值时，结果判定为正类 1。</div>
           </aside>
           <div class="settings-main">
             <div class="ph"><span class="b"></span>字段配置</div>
             <div class="cols">
               <div class="box"><div class="bt">可选字段</div><div class="chips" id="poolChips"><span class="sub">上传训练文件后自动填充…</span></div></div>
               <div class="box"><div class="bt">训练输入字段 X</div><div class="chips" id="inputChips"></div></div>
-              <div class="box"><div class="bt">目标字段 Y</div><select id="outputSel" style="width:100%"><option>—</option></select>
-                <div class="sub" style="margin-top:8px">点击字段标签可在列表间移动</div></div>
+              <div class="box"><div class="bt">目标字段 Y <span class="help" data-tip="点击字段标签可在列表间移动" onclick="showTip(event,this)">?</span></div><select id="outputSel" style="width:100%"><option>—</option></select></div>
             </div>
             <details class="box" id="catBox" style="margin-top:12px">
               <summary class="bt" style="cursor:pointer">类别字段<span class="help" data-tip="城市、零件类型等文本字段可勾选纳入模型" onclick="showTip(event,this)">?</span></summary>
@@ -602,7 +596,7 @@
             <div class="box" style="margin-top:12px">
               <div class="bt">AI 生成新特征<span class="help" data-tip="用一句话描述逻辑，如「全球成本除以本地成本」「每个城市的平均成本」「城市和类型拼成新类别」" onclick="showTip(event,this)">?</span></div>
               <details id="aiSettings" style="margin:8px 0">
-                <summary style="cursor:pointer;color:var(--accent)">AI 设置（填入你自己的 API Key）</summary>
+                <summary style="cursor:pointer;color:var(--accent)">AI 设置（填入你自己的 API Key） <span class="help" data-tip="默认用 DeepSeek（接口 https://api.deepseek.com、模型 deepseek-v4-flash），填入你自己的 API Key 即可。也可改成别家（如 OpenAI：https://api.openai.com/v1 + gpt-4o-mini）。Key 仅存在你本机浏览器、生成时临时发给本服务调用，不会存到服务器。" onclick="showTip(event,this)">?</span></summary>
                 <div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin-top:8px">
                   <label for="aiKey">API Key</label>
                   <input type="password" id="aiKey" placeholder="sk-... 只保存在你本机浏览器" autocomplete="off">
@@ -611,7 +605,6 @@
                   <label for="aiModel">模型</label>
                   <input id="aiModel" value="deepseek-v4-flash" placeholder="deepseek-v4-flash">
                 </div>
-                <div class="sub" style="margin-top:6px">默认用 DeepSeek（接口 https://api.deepseek.com、模型 deepseek-v4-flash），填入你自己的 API Key 即可。也可改成别家（如 OpenAI：https://api.openai.com/v1 + gpt-4o-mini）。Key 仅存在你本机浏览器、生成时临时发给本服务调用，不会存到服务器。</div>
               </details>
               <div style="display:flex;gap:8px;margin:8px 0">
                 <input id="featDesc" placeholder="描述新特征的计算逻辑…" style="flex:1"
@@ -637,8 +630,7 @@
       <div class="page-head">
         <div>
           <div class="stepline">预测流程 · 第 1 步 / 共 3 步</div>
-          <h2>选择预测模型</h2>
-          <p>使用当前模型，或导入之前保存的模型文件</p>
+          <h2>选择预测模型 <span class="help" data-tip="使用当前模型，或导入之前保存的模型文件" onclick="showTip(event,this)">?</span></h2>
         </div>
         <div class="progress" aria-label="当前进度 1/3"><span class="on"></span><span></span><span></span></div>
       </div>
@@ -656,8 +648,7 @@
         <label class="optcard" id="optImport">
           <input type="radio" name="modelChoice" value="import" onclick="pickModel('import')">
           <div>
-            <div class="ot">导入已保存的模型文件</div>
-            <div class="sub">支持之前通过“导出模型”生成的 .pkl 文件</div>
+            <div class="ot">导入已保存的模型文件 <span class="help" data-tip="支持之前通过“导出模型”生成的 .pkl 文件" onclick="showTip(event,this)">?</span></div>
             <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
               <label class="btn ghost" style="cursor:pointer">选择 .pkl 文件
                 <input type="file" id="impModelFile" accept=".pkl,.model" style="display:none"></label>
@@ -678,8 +669,7 @@
       <div class="page-head">
         <div>
           <div class="stepline">预测流程 · 第 2 步 / 共 3 步</div>
-          <h2>上传并匹配数据</h2>
-          <p>系统会自动匹配同名字段，也可手动调整</p>
+          <h2>上传并匹配数据 <span class="help" data-tip="系统会自动匹配同名字段，也可手动调整" onclick="showTip(event,this)">?</span></h2>
         </div>
         <div class="progress" aria-label="当前进度 2/3"><span class="on"></span><span class="on"></span><span></span></div>
       </div>
@@ -688,17 +678,15 @@
           <div>
             <div class="ph"><span class="b"></span>待预测数据</div>
             <div class="drop" id="dropPred" role="button" tabindex="0" aria-label="选择待预测 Excel 文件">
-              <div class="big">拖入待预测 Excel，或点击选择文件</div>
-              <div class="sub">无需 Y 列，只要含模型用到的字段</div></div>
+              <div class="big">拖入待预测 Excel，或点击选择文件 <span class="help" data-tip="无需 Y 列，只要含模型用到的字段" onclick="showTip(event,this)">?</span></div></div>
             <input type="file" id="filePred" accept=".xlsx,.xls" style="display:none">
             <div class="fileinfo" id="fiPred"><div id="ftPred"></div></div>
             <div class="row" style="margin-top:16px"><label for="thrPred">分类阈值</label>
               <input type="range" min="0" max="1" step="0.01" value="0.5" id="thrPred" style="flex:1"
                 oninput="thPredVal.textContent=(+this.value).toFixed(2)">
               <span class="thbadge" id="thPredVal">0.50</span></div>
-            <div class="row"><label for="compareCol">实际结果列</label>
+            <div class="row"><label for="compareCol">实际结果列 <span class="help" data-tip="可选已有实际结果的列，预测后将同时计算准确率。" onclick="showTip(event,this)">?</span></label>
               <select id="compareCol" style="flex:1"><option value="">（不对比）</option></select></div>
-            <div class="sub">可选已有实际结果的列，预测后将同时计算准确率。</div>
           </div>
           <div>
             <div class="ph"><span class="b"></span>字段映射</div>
@@ -717,8 +705,7 @@
       <div class="page-head">
         <div>
           <div class="stepline" id="resultStep">结果</div>
-          <h2>分析结果</h2>
-          <p>查看模型状态、分类分布与明细预览</p>
+          <h2>分析结果 <span class="help" data-tip="查看模型状态、分类分布与明细预览" onclick="showTip(event,this)">?</span></h2>
         </div>
         <div class="progress" aria-label="当前进度 3/3"><span class="on"></span><span class="on"></span><span class="on"></span></div>
       </div>
@@ -733,8 +720,7 @@
             <tbody id="previewBody"><tr><td colspan="6" class="sub">运行后显示…</td></tr></tbody></table></div></div>
       </div>
       <div class="panel" id="impPanel" style="display:none;margin-top:14px">
-        <div class="ph"><span class="b"></span>特征重要性
-          <span class="sub" style="font-weight:400">系数为正推向正类 1，为负推向负类 0</span></div>
+        <div class="ph"><span class="b"></span>特征重要性<span class="help" data-tip="系数为正推向正类 1，为负推向负类 0" onclick="showTip(event,this)">?</span></div>
         <div id="impBody"></div>
       </div>
       <div class="btns">
@@ -1070,12 +1056,17 @@ function renderMap(match){
     const sel=document.createElement('select');sel.style.width='100%';sel.dataset.feat=feat;
     const om=document.createElement('option');om.value='__MEAN__';om.textContent='（用训练均值填充）';sel.appendChild(om);
     const oz=document.createElement('option');oz.value='__ZERO__';oz.textContent='（不采用 / 置0）';sel.appendChild(oz);
+    const oc=document.createElement('option');oc.value='__CUSTOM__';oc.textContent='（自定义值）';sel.appendChild(oc);
     S.mapCols.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
     sel.value = match[feat] ? match[feat] : '__MEAN__';
+    const num=document.createElement('input');num.type='number';num.step='any';num.placeholder='缺失时填充的值';
+    num.style.cssText='width:100%;margin-top:6px;'+(sel.value==='__CUSTOM__'?'':'display:none');
+    sel._numEl=num;
+    sel.onchange=()=>{num.style.display=(sel.value==='__CUSTOM__')?'':'none';};
     const wrap=document.createElement('div');wrap.className='map';
     const matched = !!match[feat];
     wrap.innerHTML=`<div${matched?'':' class="bad"'}>${feat}${matched?'':'（未匹配）'}</div><div class="sub">匹配至</div>`;
-    const box=document.createElement('div');box.appendChild(sel);wrap.appendChild(box);
+    const box=document.createElement('div');box.appendChild(sel);box.appendChild(num);wrap.appendChild(box);
     area.appendChild(wrap);
   });
 }
@@ -1088,7 +1079,16 @@ function fillCompare(cols){
   if(auto)sel.value=auto;
 }
 async function doPredict(){
-  const mapping={};document.querySelectorAll('#mapArea select').forEach(s=>{if(s.value)mapping[s.dataset.feat]=s.value;});
+  const mapping={};let badCustom=null;
+  document.querySelectorAll('#mapArea select').forEach(s=>{
+    if(!s.value)return;
+    if(s.value==='__CUSTOM__'){
+      const v=s._numEl?s._numEl.value:'';
+      if(v===''||isNaN(+v)){badCustom=s.dataset.feat;return;}
+      mapping[s.dataset.feat]='__CUSTOM__:'+(+v);
+    }else mapping[s.dataset.feat]=s.value;
+  });
+  if(badCustom){toast(`字段「${badCustom}」选了自定义值，请填写一个数值`);return;}
   const b=document.getElementById('predBtn'),o=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin"></span> 生成中…';
   const cfg={threshold:+document.getElementById('thrPred').value,mapping,
     compare_col:document.getElementById('compareCol').value||null};

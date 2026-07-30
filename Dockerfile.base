@@ -1,0 +1,9 @@
+# 基础镜像：在【本地能上网、且能连公司 Harbor 的电脑】上构建并 push 到 Harbor
+# 一次即可，以后依赖没变就不用重建
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    LANG=C.UTF-8
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
